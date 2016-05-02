@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# useful aliases
+alias grpe='grep'
+alias l.='ls -ad .*'
+alias ll='ls -l'
+alias pps='ps u | pgrep'
+
+# useful functions
+cscp() {
+	if [[ -z $1 ]]; then
+		echo "No file specified"
+		exit 1
+	else
+		FNAME=$1
+		FEXT=${FNAME:(-3)}
+	fi
+
+	if [[ -z $2 ]]; then
+		echo "No destination specified"
+		exit 1
+	else
+		DEST=$2
+	fi
+
+	if [[ $FEXT == ".py" ]]; then
+		python $FNAME -h >/dev/null && scp $FNAME $DEST
+	elif [[ $FEXT == ".pl" ]]; then
+		perl -c $FNAME && scp $FNAME $DEST
+	else
+		scp $FNAME $DEST
+	fi
+}
+
+cmkdir() {
+	mkdir -p $1 && cd $1
+}
