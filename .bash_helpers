@@ -4,7 +4,6 @@
 alias grpe='grep'
 alias l.='ls -ad .*'
 alias ll='ls -l'
-alias pps='ps u | pgrep'
 
 # useful functions
 cscp() {
@@ -34,4 +33,13 @@ cscp() {
 
 cmkdir() {
 	mkdir -p $1 && cd $1
+}
+
+pps() {
+	ps u $(pgrep $1)
+}
+
+pcnt() {
+	CNT=$(pgrep -P $$ | wc -l)
+	echo $((CNT - 1))
 }
