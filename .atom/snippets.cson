@@ -1,0 +1,186 @@
+# Your snippets
+#
+# Atom snippets allow you to enter a simple prefix in the editor and hit tab to
+# expand the prefix into a larger code block with templated values.
+#
+# You can create a new snippet in this file by typing "snip" and then hitting
+# tab.
+#
+# An example CoffeeScript snippet to expand log to console.log:
+#
+# '.source.coffee':
+#   'Console log':
+#     'prefix': 'log'
+#     'body': 'console.log $1'
+#
+# Each scope (e.g. '.source.coffee' above) can only be declared once.
+#
+# This file uses CoffeeScript Object Notation (CSON).
+# If you are unfamiliar with CSON, you can read more about it in the
+# Atom Flight Manual:
+# https://atom.io/docs/latest/using-atom-basic-customization#cson
+
+'.source.python':
+# python skeleton
+    'Python Skeleton':
+        'prefix': 'pyskel'
+        'body': """
+#!/usr/bin/env python
+
+import argparse
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--verbose', action='store_true', help="be extra chatty")
+    parser.add_argument('--debug', action='store_true', help="run in debug mode")
+    args = parser.parse_args()
+
+    if args.debug:
+        setattr(args, 'verbose', True)
+
+    ${1:# do something}
+\n\n###\n\n
+if __name__ == '__main__':
+    main()\n"""
+
+# date_string argparse param
+    'Argparse String to Date':
+        'prefix': 'pyds'
+        'body': """
+def date_string(string):
+    try:
+        parsed = datetime.datetime.strptime(string, '%Y-%m-%d')
+    except:
+        raise argparse.ArgumentTypeError('{0} is not a valid date string.'.format(string))
+    return parsed\n"""
+
+# now() style date string
+    'now date string':
+        'prefix': 'pynow'
+        'body':"""
+def now():
+    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")\n"""
+
+# list flattener
+    'Reduce multidimensional list by 1':
+        'prefix': 'pysquish'
+        'body': """
+def flatten(list):
+    return [item for sublist in list for item in sublist]\n\n"""
+
+# unicode csv writer
+    'Unicode csv writer':
+        'prefix': 'pycsvuni'
+        'body': """
+class UnicodeWriter:
+    def __init__(self, f, dialect=csv.excel, encoding="utf-8-sig", **kwds):
+        self.queue = cStringIO.StringIO()
+        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
+        self.stream = f
+        self.encoder = codecs.getincrementalencoder(encoding)()
+
+    def writerow(self, row):
+        self.writer.writerow([s.encode("utf-8") for s in row])
+        data = self.queue.getvalue()
+        data = data.decode("utf-8")
+        data = self.encoder.encode(data)
+        self.stream.write(data)
+        self.queue.truncate(0)
+
+    def writerows(self, rows):
+        for row in rows:
+            self.writerow(row)\n\n"""
+
+# get age in years from two datetime objects
+    'Get age in years from two datetime objects':
+        'prefix': 'pyage'
+        'body': """
+def calc_age(bday):
+    today = datetime.date.today()
+    return today.year - bday.year - ((today.month, today.day) < (bday.month, bday.day))\n\n"""
+
+# pynamodb model skeleton
+    'PynamoDB model skeleton':
+        'prefix': 'pydb_model'
+        'body': """
+class $1(Model):
+    class Meta:
+        read_capacity_units = None
+        write_capacity_units = None
+        table_name = '$1'
+    \# some_field = SomeAttribute(hash_key=True)\n\n"""
+
+# pynamodb index skeleton
+    'PynamoDB index skeleton':
+        'prefix': 'pydb_idx'
+        'body': """
+class $1(GlobalSecondaryIndex):
+    class Meta:
+        read_capacity_units = None
+        write_capacity_units = None
+        index_name = '$1'
+        projection = AllProjection()
+    \# some_field = SomeAttribute(hash_key=True)\n"""
+
+'.source.shell':
+# child process count
+    'pcnt: number of child processes':
+        'prefix': 'pcnt'
+        'body': """pcnt() \\{ CNT=$(pgrep -P $$ | wc -l); echo $((CNT - 1)) ; \\}\n"""
+
+# two date strings to a time delta string
+    'delta_str: get time delta string from two date strings':
+        'prefix': 'delta_str'
+        'body': """function delta_str() \\{
+            if [[ -z \\$1 ]] || [[ -z \\$2 ]]; then
+                echo "you must pass two date strings to get a time delta"
+                return
+            fi
+
+            START_TIME=\\$1
+            END_TIME=\\$2
+
+            DELTA_TOT=$(( $(date -d "$END_TIME" +%s) - $(date -d "$START_TIME" +%s) ))
+            DELTA_SEC=$(( DELTA_TOT % 60 ))
+            MINS_TOT=$(( DELTA_TOT / 60 ))
+            if [[ $MINS_TOT -ge 60 ]]; then
+                DELTA_MINS=$(( MINS_TOT % 60 ))
+                HRS_TOT=$(( MINS_TOT / 60 ))
+                if [[ $HRS_TOT -ge 24 ]]; then
+                    DELTA_DAYS=$(( HRS_TOT / 24 ))
+                    DELTA_HRS=$(( HRS_TOT % 24 ))
+                    printf "%dd%02dh%02dm%02ds\\\\n" $DELTA_DAYS $DELTA_HRS $DELTA_MINS $DELTA_SEC
+                else
+                    printf "%02dh%02dm%02ds\\\\n" $HRS_TOT $DELTA_MINS $DELTA_SEC
+                fi
+            else
+                printf "%02dm%02ds\\\\n" $MINS_TOT $DELTA_SEC
+            fi
+        \\}\n\n"""
+
+# multiprocess master script
+    'Multiprocess master script':
+        'prefix': 'master'
+        'body' : """
+#!/bin/bash
+
+MAX_PROCS=${1:24}
+MIN_VAL=${2:}
+MAX_VAL=${3:}
+
+pcnt() { CNT=$(pgrep -P $$ | wc -l); echo $((CNT - 1)) ; }
+START_TIME=$(date)
+CURR_VAL=$MIN_VAL
+while [[ $CURR_VAL != $MAX_VAL ]]; do
+        while [[ $(pcnt) -ge $MAX_PROCS ]]; do
+                sleep 15
+        done
+
+        # ./${4:"some_script.py"} -v $CURR_VAL &
+        # CURR_VAL=${5:"$(SOME_FUNCTION)"}
+done
+wait
+END_TIME=$(date)
+
+echo All done!
+echo Ran from $START_TIME to $END_TIME\n"""
