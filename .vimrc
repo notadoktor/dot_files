@@ -16,3 +16,4 @@ set autoread
 set magic
 set t_vb=
 set nu
+set hlsearch
