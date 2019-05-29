@@ -2,10 +2,33 @@
 
 # useful aliases
 alias grpe='grep'
+alias pytohn='python'
 alias l.='ls -ad .*'
 alias ll='ls -l'
+alias rmdocker='docker ps -aq | xargs docker rm -f'
 
 # useful functions
+abs_dirname() {
+    if [[ -z $1 ]]; then
+        SOURCE="${BASH_SOURCE[0]}"
+    else
+        SOURCE=$1
+    fi
+
+    # resolve $SOURCE until the file is no longer a symlink
+    while [ -h "$SOURCE" ]; do
+      DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+      SOURCE="$(readlink "$SOURCE")"
+      # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+      [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+    done
+    echo "$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+}
+
+cmkdir() {
+	mkdir -p $1 && cd $1
+}
+
 cscp() {
 	if [[ -z $1 ]]; then
 		echo "No file specified"
@@ -31,15 +54,95 @@ cscp() {
 	fi
 }
 
-cmkdir() {
-	mkdir -p $1 && cd $1
+g() {
+  git status -sb
 }
 
-pps() {
-	ps u $(pgrep $1)
+moo() {
+	export LANG="en_US.UTF-8"
+	ESTR='o=X$@*-O.¿¡'
+	TSTR='    UV^Ü'
+	E=${ESTR:$(($(tr -cd 0-9 </dev/urandom | head -c 2) % ${#ESTR})):1}
+	T=${TSTR:$(($(tr -cd 0-9 </dev/urandom | head -c 2) % ${#TSTR})):1}
+	fortune bofh-excuses | /usr/games/cowsay -n -e "$E$E" -T "$T "
+	echo
 }
 
 pcnt() {
 	CNT=$(pgrep -P $$ | wc -l)
 	echo $((CNT - 1))
+}
+
+port_used() {
+    if [[ -z $1 ]]; then
+        echo "no port specified"
+        exit 1
+    fi
+    netstat -pnlt 2>/dev/null | grep -c ":$1\>"
+}
+
+pps() {
+	SUBP=$(pgrep $1)
+	if [[ -z $SUBP ]]; then
+		echo "No '$1' processes found"
+	else
+		ps wwu $SUBP
+	fi
+}
+
+thirdline() {
+	awk '{if (NR%3==0){print "\033[32m" $0 "\033[0m"} else{print}}'
+}
+
+tun() {
+    if [[ -z $1 ]]; then
+        echo "You must specify where to tunnel"
+        echo
+        echo "tun < hostname > [ portnum ]"
+        echo
+	elif [[ "$1" == "list" ]]; then
+		tunlist
+    else
+        DEF_PORT=8080
+        TUN_HOST=$1
+        TUN_PORT=$2
+        if [[ $(pps ssh | grep -wc "$TUN_HOST") -gt 0 ]]; then
+            CURR_PORT=$(pps ssh | grep -w "$TUN_HOST" | grep -owP -- "-D \d+" 2>/dev/null | cut -f2 -d' ')
+            if [[ ! -z $CURR_PORT ]]; then
+                echo "Tunnel to $TUN_HOST already exists on port $CURR_PORT"
+            fi
+        elif [[ ! -z $TUN_PORT ]] && [[ $(port_used $TUN_PORT) -gt 0 ]]; then
+            CURR_TUN=$(pps ssh | grep -w -- "-D $TUN_PORT" | perl -lane 'print pop @F')
+            echo "Can't create tunnel to $TUN_HOST, tunnel to $CURR_TUN already running on $TUN_PORT"
+        else
+            TUN_PORT=${TUN_PORT:-$DEF_PORT}
+            PORT_IN_USE=$(port_used $TUN_PORT)
+            while [[ "$PORT_IN_USE" -ne 0 ]]; do
+                TUN_PORT=$((TUN_PORT+1))
+                PORT_IN_USE=$(port_used $TUN_PORT)
+            done
+            ssh -D $TUN_PORT -fCqN $TUN_HOST
+			ERR_CODE=$?
+			if [[ $ERR_CODE -ne 0 ]]; then
+				echo "Error setting up tunnel to $TUN_HOST: $ERR_CODE"
+			else
+				# echo -e "\$?: $?\n\$!: $!"
+	            echo "Tunnel to $TUN_HOST created on port $TUN_PORT"
+			fi
+        fi
+    fi
+}
+
+tunlist() {
+	pps ssh | grep fCqN | perl -lane 'push @tuns, [@F[1,-3,-1]]}{print join("\t", qw(PID PORT HOST));print join("\t", @$_) foreach (@tuns)'
+}
+
+docker-ip() {
+	if [[ -z $1 ]]; then
+		echo "no container ID/name specified"
+	elif [[ "$(docker ps | grep -wc $1)" != "1" ]]; then
+		echo "invalid container ID/name specified"
+	else
+		docker inspect $1 | jq -r '.[0].NetworkSettings.IPAddress'
+	fi
 }
