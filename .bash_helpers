@@ -6,6 +6,7 @@ alias pytohn='python'
 alias l.='ls -ad .*'
 alias ll='ls -l'
 alias rmdocker='docker ps -aq | xargs docker rm -f'
+alias sys-gsettings='/usr/bin/gsettings'
 
 # useful functions
 abs_dirname() {
@@ -152,4 +153,79 @@ docker-ip() {
 	else
 		docker inspect "$1" | jq -r '.[0].NetworkSettings.IPAddress'
 	fi
+}
+
+# I can never remember ps state codes
+def_state() {
+	if [[ -z $1 ]]; then
+		echo "no state code specified"
+	else
+		case ${1:0:1} in
+			D)
+				base_state="uninterruptible sleep"
+				;;
+			R)
+				base_state="running"
+				;;
+			S)
+				base_state="interruptible sleep"
+				;;
+			T)
+				base_state="stopped"
+				;;
+			Z)
+				base_state="zombie"
+				;;
+			*)
+				base_state="invalid code: ${1:0:1}"
+				;;
+		esac
+		if [[ ! -z ${1:1:1} ]]; then
+			case ${1:1:1} in
+				"<")
+					state_modifier="high priority"
+					;;
+				N)
+					state_modifier="low priority"
+					;;
+				L)
+					state_modifier="pages locked in memory"
+					;;
+				s)
+					state_modifier="session leader"
+					;;
+				l)
+					state_modifier="multi-threaded"
+					;;
+				+)
+					state_modifier="foreground"
+					;;
+				*)
+					state_modifier="invalid modifier: ${1:1:1}"
+					;;
+			esac
+		fi
+
+		if [[ -z $state_modifier ]]; then
+			desc="$base_state"
+		else
+			desc="$base_state ($state_modifier)"
+		fi
+		echo "state $1: $desc"
+	fi
+	unset base_state state_modifier desc
+}
+
+# snap clutters up df listings SO MUCH
+dff() {
+	if [[ -z "$@" ]]; then
+		bash -c 'df -h | grep -v /snap/'
+	else
+		bash -c "df $@"
+	fi
+}
+
+# awscli works with DO, except can't change endpoint in config
+awsdo() {
+	aws --endpoint https://fra1.digitaloceanspaces.com $@
 }
