@@ -1,20 +1,11 @@
-#!/bin/bash
+# shellcheck shell=bash
 
-# useful aliases
-alias grpe='grep'
-alias pytohn='python'
-alias dc=cd # no, I'm never actually going to use dc intentionally
-alias l.='ls -ad .*'
-alias ll='ls -l'
-alias rmdocker='docker ps -aq | xargs docker rm -f'
-alias sys-gsettings='/usr/bin/gsettings'
-alias cd='>/dev/null cd' # make CDPATH shut up
-
-# useful functions
 bail() {
     [[ -n $1 ]] && echo "$1"
     exit 1
 }
+
+# works on MacOS and other *nix, more complicated because macs are afraid of readlink
 abs_dirname() {
     if [[ -z $1 ]]; then
         SOURCE="${BASH_SOURCE[0]}"
@@ -43,6 +34,7 @@ cmkdir() {
     )
 }
 
+# run basic check on perl/python scripts before uploading
 cscp() {
     if [[ -z $1 ]]; then
         echo "No file specified"
@@ -103,10 +95,6 @@ pps() {
         # shellcheck disable=2086
         ps wwu $SUBP
     fi
-}
-
-thirdline() {
-    awk '{if (NR%3==0){print "\033[32m" $0 "\033[0m"} else{print}}'
 }
 
 tun() {
@@ -226,9 +214,9 @@ def_state() {
 # snap clutters up df listings SO MUCH
 dff() {
     if [[ -z "$*" ]]; then
-        bash -c 'df -h | grep -v /snap/'
+        command df -h | grep -v /snap/
     else
-        bash -c "df $*"
+        command df "$*"
     fi
 }
 
@@ -237,6 +225,7 @@ awsdo() {
     aws --endpoint https://fra1.digitaloceanspaces.com "$@"
 }
 
+# use default UI app to open a given file/location
 o() {
     if [ $# -eq 0 ]; then
         xdg-open . >/dev/null 2>&1
@@ -245,6 +234,7 @@ o() {
     fi
 }
 
+# nicer man colors / formatting
 man() {
     env \
         LESS_TERMCAP_mb="$(printf '\e[1;31m')" \
@@ -277,6 +267,7 @@ ssh_fingerprint() {
     fi
 }
 
+# update known_hosts automatically for trusted hosts so ssh doesn't prompt for verification
 get_host() {
     [ -n "$1" ] || bail "give a hostname/IP"
     tmp_file=$(mktemp)
@@ -290,9 +281,4 @@ get_host() {
         echo "No new keys from $1"
     fi
     # rm "$tmp_file" "$tmp_new"
-}
-
-ra_ssh() {
-    get_host "$1"
-    ssh -i ~/.ssh/id_revapp "root@$1"
 }

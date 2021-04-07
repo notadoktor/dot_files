@@ -1,0 +1,17 @@
+# shellcheck shell=bash
+
+# basic
+alias cd='>/dev/null cd' # make CDPATH shut up
+alias grep='grep --color'
+alias ls='ls --color=auto'
+alias ll='ls -alF'
+alias ll='ls -laF'
+alias scp='scp -r'
+
+# common typos
+alias grpe='grep'
+alias pytohn='python'
+alias dc=cd # no, I'm never actually going to use dc intentionally
+
+# other
+alias rmdocker='docker ps -aq | xargs docker rm -f'

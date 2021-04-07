@@ -1,0 +1,39 @@
+# shellcheck shell=bash
+
+# XDG defaults
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_DATA_DIRS=/usr/share/ubuntu:/usr/local/share:/usr/share:/var/lib/snapd/desktop
+
+# general
+export LANG="en_US.UTF-8"
+export LC_ALL="en_US.UTF-8"
+export PAGER=less
+export MANPAGER="less -X"
+export EDITOR=vim
+
+# python
+export PYTHONPATH=$HOME/lib/python
+export PIPENV_VENV_IN_PROJECT=1
+
+# go stuff
+export GOPATH=$HOME/go
+export GOBIN=$GOPATH/bin
+export GO111MODULE=auto
+
+# bash
+export PATH="$GOBIN:$PATH"
+export CDPATH=:/data/playground
+export HISTSIZE=50000000
+export HISTFILESIZE=$HISTSIZE
+export HISTCONTROL=ignoredups
+
+# docker
+export DOCKER_BUILDKIT=1
+
+# flatpak
+if which flatpak >/dev/null 2>&1; then
+    FLATPAK_XDG_DATA_DIRS="/var/lib/flatpak/exports/share:$XDG_DATA_HOME/flatpak/exports/share"
+    if ! [[ "$XDG_DATA_DIRS" =~ :$FLATPAK_XDG_DATA_DIRS ]]; then
+        export XDG_DATA_DIRS="$XDG_DATA_DIRS:$FLATPAK_XDG_DATA_DIRS"
+    fi
+fi

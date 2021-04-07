@@ -1,0 +1,62 @@
+# shellcheck shell=bash
+supp_dir="$HOME/.bash_extras"
+
+load_extras() {
+    if [[ -z "$1" ]]; then
+        echo "cannot source nothing, something went wrong in bashrc"
+    else
+        for supp_file in "$supp_dir/$1"*; do
+            echo "$supp_file"
+            # shellcheck source=/dev/null
+            [[ -f $supp_file ]] && source "$supp_file"
+        done
+    fi
+}
+
+# append to the history file, don't overwrite it
+shopt -s histappend
+shopt -s globstar
+
+# load exports first
+load_extras exports
+
+# set up conda, if present
+if [[ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "$HOME/miniconda3/etc/profile.d/conda.sh"
+    conda activate "${DEFAULT_CONDA_ENV:-base}"
+fi
+
+# load the rest
+for supp_type in functions aliases secrets; do
+    load_extras $supp_type
+done
+
+# custom completions
+if [[ -d /etc/bash_completion.d/ ]]; then
+    for file in /etc/bash_completion.d/*; do
+        # shellcheck source=/dev/null
+        [[ -f $file ]] && source "$file"
+    done
+fi
+
+if which doctl >/dev/null 2>&1; then
+    # shellcheck source=/dev/null
+    source <(doctl completion bash)
+fi
+
+if which pip >/dev/null 2>&1; then
+    # shellcheck source=/dev/null
+    source <(pip completion --bash)
+fi
+
+if which aws >/dev/null 2>&1; then
+    # shellcheck source=/dev/null
+    complete -C aws_completer aws
+fi
+
+# stupid default umask
+umask 002
+
+# shellcheck source=/dev/null
+[[ -f $HOME/liquidprompt/liquidprompt ]] && [[ $- = *i* ]] && source "$HOME/liquidprompt/liquidprompt"
