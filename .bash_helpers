@@ -3,229 +3,296 @@
 # useful aliases
 alias grpe='grep'
 alias pytohn='python'
+alias dc=cd # no, I'm never actually going to use dc intentionally
 alias l.='ls -ad .*'
 alias ll='ls -l'
 alias rmdocker='docker ps -aq | xargs docker rm -f'
 alias sys-gsettings='/usr/bin/gsettings'
+alias cd='>/dev/null cd' # make CDPATH shut up
 
 # useful functions
+bail() {
+    [[ -n $1 ]] && echo "$1"
+    exit 1
+}
 abs_dirname() {
-	if [[ -z $1 ]]; then
-		SOURCE="${BASH_SOURCE[0]}"
-	else
-		SOURCE=$1
-	fi
+    if [[ -z $1 ]]; then
+        SOURCE="${BASH_SOURCE[0]}"
+    else
+        SOURCE=$1
+    fi
 
-	# resolve $SOURCE until the file is no longer a symlink
-	while [ -h "$SOURCE" ]; do
-		DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-		SOURCE="$(readlink "$SOURCE")"
-		# if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-		[[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-	done
-	cd -P "$(dirname "$SOURCE")" && pwd
+    # resolve $SOURCE until the file is no longer a symlink
+    while [ -h "$SOURCE" ]; do
+        DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+        SOURCE="$(readlink "$SOURCE")"
+        # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+        [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+    done
+    cd -P "$(dirname "$SOURCE")" && pwd
 }
 
 cmkdir() {
-	[ -d "$1" ] || mkdir -p "$1" || (
-		echo "mkdir failed: $1"
-		exit 1
-	)
-	cd "$1" || (
-		echo "cd failed: $1"
-		exit 1
-	)
+    [ -d "$1" ] || mkdir -p "$1" || (
+        echo "mkdir failed: $1"
+        exit 1
+    )
+    cd "$1" || (
+        echo "cd failed: $1"
+        exit 1
+    )
 }
 
 cscp() {
-	if [[ -z $1 ]]; then
-		echo "No file specified"
-		exit 1
-	else
-		FNAME=$1
-		FEXT=${FNAME: -3}
-	fi
+    if [[ -z $1 ]]; then
+        echo "No file specified"
+        exit 1
+    else
+        FNAME=$1
+        FEXT=${FNAME:(-3)}
+    fi
 
-	if [[ -z $2 ]]; then
-		echo "No destination specified"
-		exit 1
-	else
-		DEST=$2
-	fi
+    if [[ -z $2 ]]; then
+        echo "No destination specified"
+        exit 1
+    else
+        DEST=$2
+    fi
 
-	if [[ $FEXT == ".py" ]]; then
-		python "$FNAME" -h >/dev/null && scp "$FNAME" "$DEST"
-	elif [[ $FEXT == ".pl" ]]; then
-		perl -c "$FNAME" && scp "$FNAME" "$DEST"
-	else
-		scp "$FNAME" "$DEST"
-	fi
+    if [[ $FEXT == ".py" ]]; then
+        python "$FNAME" -h >/dev/null && scp "$FNAME" "$DEST"
+    elif [[ $FEXT == ".pl" ]]; then
+        perl -c "$FNAME" && scp "$FNAME" "$DEST"
+    else
+        scp "$FNAME" "$DEST"
+    fi
 }
 
 g() {
-	git status -sb
+    git status >/dev/null 2>&1 && git status -sb || echo "not in a git repo"
 }
 
 moo() {
-	export LANG="en_US.UTF-8"
-	ESTR='o=X$@*-O.¿¡'
-	TSTR='    UV^Ü'
-	E=${ESTR:$(($(tr -cd 0-9 </dev/urandom | head -c 2) % ${#ESTR})):1}
-	T=${TSTR:$(($(tr -cd 0-9 </dev/urandom | head -c 2) % ${#TSTR})):1}
-	fortune bofh-excuses | /usr/games/cowsay -n -e "$E$E" -T "$T "
-	echo
+    export LANG="en_US.UTF-8"
+    ESTR='o=X$@*-O.¿¡'
+    TSTR='    UV^Ü'
+    E=${ESTR:$(($(tr -cd 0-9 </dev/urandom | head -c 2) % ${#ESTR})):1}
+    T=${TSTR:$(($(tr -cd 0-9 </dev/urandom | head -c 2) % ${#TSTR})):1}
+    fortune bofh-excuses | /usr/games/cowsay -n -e "$E$E" -T "$T "
+    echo
 }
 
 pcnt() {
-	CNT=$(pgrep -P $$ | wc -l)
-	echo $((CNT - 1))
+    CNT=$(pgrep -P $$ | wc -l)
+    echo $((CNT - 1))
 }
 
 port_used() {
-	if [[ -z $1 ]]; then
-		echo "no port specified"
-		exit 1
-	fi
-	netstat -pnlt 2>/dev/null | grep -c ":$1\>"
+    if [[ -z $1 ]]; then
+        echo "no port specified"
+        exit 1
+    fi
+    netstat -pnlt 2>/dev/null | grep -c ":$1\>"
 }
 
 pps() {
-	SUBP=$(pgrep "$1")
-	if [[ -z $SUBP ]]; then
-		echo "No '$1' processes found"
-	else
-		ps wwu "$SUBP"
-	fi
+    SUBP=$(pgrep "$1")
+    if [[ -z $SUBP ]]; then
+        echo "No '$1' processes found"
+    else
+        # shellcheck disable=2086
+        ps wwu $SUBP
+    fi
 }
 
 thirdline() {
-	awk '{if (NR%3==0){print "\033[32m" $0 "\033[0m"} else{print}}'
+    awk '{if (NR%3==0){print "\033[32m" $0 "\033[0m"} else{print}}'
 }
 
 tun() {
-	if [[ -z $1 ]]; then
-		echo "You must specify where to tunnel"
-		echo
-		echo "tun < hostname > [ portnum ]"
-		echo
-	elif [[ $1 == "list" ]]; then
-		tunlist
-	else
-		DEF_PORT=8080
-		TUN_HOST=$1
-		TUN_PORT=$2
-		if [[ $(pps ssh | grep -wc "$TUN_HOST") -gt 0 ]]; then
-			CURR_PORT=$(pps ssh | grep -w "$TUN_HOST" | grep -owP -- "-D \d+" 2>/dev/null | cut -f2 -d' ')
-			if [[ -n $CURR_PORT ]]; then
-				echo "Tunnel to $TUN_HOST already exists on port $CURR_PORT"
-			fi
-		elif [[ -n $TUN_PORT ]] && [[ $(port_used "$TUN_PORT") -gt 0 ]]; then
-			CURR_TUN=$(pps ssh | grep -w -- "-D $TUN_PORT" | perl -lane 'print pop @F')
-			echo "Can't create tunnel to $TUN_HOST, tunnel to $CURR_TUN already running on $TUN_PORT"
-		else
-			TUN_PORT=${TUN_PORT:-$DEF_PORT}
-			PORT_IN_USE=$(port_used "$TUN_PORT")
-			while [[ $PORT_IN_USE -ne 0 ]]; do
-				TUN_PORT=$((TUN_PORT + 1))
-				PORT_IN_USE=$(port_used $TUN_PORT)
-			done
-			ssh -D $TUN_PORT -fCqN "$TUN_HOST"
-			ERR_CODE=$?
-			if [[ $ERR_CODE -ne 0 ]]; then
-				echo "Error setting up tunnel to $TUN_HOST: $ERR_CODE"
-			else
-				# echo -e "\$?: $?\n\$!: $!"
-				echo "Tunnel to $TUN_HOST created on port $TUN_PORT"
-			fi
-		fi
-	fi
+    if [[ -z $1 ]]; then
+        echo "You must specify where to tunnel"
+        echo
+        echo "tun < hostname > [ portnum ]"
+        echo
+    elif [[ "$1" == "list" ]]; then
+        tunlist
+    else
+        DEF_PORT=8080
+        TUN_HOST=$1
+        TUN_PORT=$2
+        if [[ $(pps ssh | grep -wc "$TUN_HOST") -gt 0 ]]; then
+            CURR_PORT=$(pps ssh | grep -w "$TUN_HOST" | grep -owP -- "-D \d+" 2>/dev/null | cut -f2 -d' ')
+            if [[ -n $CURR_PORT ]]; then
+                echo "Tunnel to $TUN_HOST already exists on port $CURR_PORT"
+            fi
+        elif [[ -n $TUN_PORT ]] && [[ $(port_used "$TUN_PORT") -gt 0 ]]; then
+            CURR_TUN=$(pps ssh | grep -w -- "-D $TUN_PORT" | perl -lane 'print pop @F')
+            echo "Can't create tunnel to $TUN_HOST, tunnel to $CURR_TUN already running on $TUN_PORT"
+        else
+            TUN_PORT=${TUN_PORT:-$DEF_PORT}
+            PORT_IN_USE=$(port_used "$TUN_PORT")
+            while [[ "$PORT_IN_USE" -ne 0 ]]; do
+                TUN_PORT=$((TUN_PORT + 1))
+                PORT_IN_USE=$(port_used $TUN_PORT)
+            done
+            ssh -D $TUN_PORT -fCqN "$TUN_HOST"
+            ERR_CODE=$?
+            if [[ $ERR_CODE -ne 0 ]]; then
+                echo "Error setting up tunnel to $TUN_HOST: $ERR_CODE"
+            else
+                # echo -e "\$?: $?\n\$!: $!"
+                echo "Tunnel to $TUN_HOST created on port $TUN_PORT"
+            fi
+        fi
+    fi
 }
 
 tunlist() {
-	pps ssh | grep fCqN | perl -lane 'push @tuns, [@F[1,-3,-1]]}{print join("\t", qw(PID PORT HOST));print join("\t", @$_) foreach (@tuns)'
+    pps ssh | grep fCqN | perl -lane 'push @tuns, [@F[1,-3,-1]]}{print join("\t", qw(PID PORT HOST));print join("\t", @$_) foreach (@tuns)'
 }
 
 docker-ip() {
-	if [[ -z $1 ]]; then
-		echo "no container ID/name specified"
-	elif [[ $(docker ps | grep -wc "$1") != "1" ]]; then
-		echo "invalid container ID/name specified"
-	else
-		docker inspect "$1" | jq -r '.[0].NetworkSettings.IPAddress'
-	fi
+    if [[ -z $1 ]]; then
+        echo "no container ID/name specified"
+    elif [[ $(docker ps | grep -wc "$1") != "1" ]]; then
+        echo "invalid container ID/name specified"
+    else
+        docker inspect "$1" | jq -r '.[0].NetworkSettings.IPAddress'
+    fi
 }
 
 # I can never remember ps state codes
 def_state() {
-	if [[ -z $1 ]]; then
-		echo "no state code specified"
-	else
-		case ${1:0:1} in
-			D)
-				base_state="uninterruptible sleep"
-				;;
-			R)
-				base_state="running"
-				;;
-			S)
-				base_state="interruptible sleep"
-				;;
-			T)
-				base_state="stopped"
-				;;
-			Z)
-				base_state="zombie"
-				;;
-			*)
-				base_state="invalid code: ${1:0:1}"
-				;;
-		esac
-		if [[ ! -z ${1:1:1} ]]; then
-			case ${1:1:1} in
-				"<")
-					state_modifier="high priority"
-					;;
-				N)
-					state_modifier="low priority"
-					;;
-				L)
-					state_modifier="pages locked in memory"
-					;;
-				s)
-					state_modifier="session leader"
-					;;
-				l)
-					state_modifier="multi-threaded"
-					;;
-				+)
-					state_modifier="foreground"
-					;;
-				*)
-					state_modifier="invalid modifier: ${1:1:1}"
-					;;
-			esac
-		fi
+    if [[ -z $1 ]]; then
+        echo "no state code specified"
+    else
+        case ${1:0:1} in
+            D)
+                base_state="uninterruptible sleep"
+                ;;
+            R)
+                base_state="running"
+                ;;
+            S)
+                base_state="interruptible sleep"
+                ;;
+            T)
+                base_state="stopped"
+                ;;
+            Z)
+                base_state="zombie"
+                ;;
+            *)
+                base_state="invalid code: ${1:0:1}"
+                ;;
+        esac
+        if [[ -n ${1:1:1} ]]; then
+            case ${1:1:1} in
+                "<")
+                    state_modifier="high priority"
+                    ;;
+                N)
+                    state_modifier="low priority"
+                    ;;
+                L)
+                    state_modifier="pages locked in memory"
+                    ;;
+                s)
+                    state_modifier="session leader"
+                    ;;
+                l)
+                    state_modifier="multi-threaded"
+                    ;;
+                +)
+                    state_modifier="foreground"
+                    ;;
+                *)
+                    state_modifier="invalid modifier: ${1:1:1}"
+                    ;;
+            esac
+        fi
 
-		if [[ -z $state_modifier ]]; then
-			desc="$base_state"
-		else
-			desc="$base_state ($state_modifier)"
-		fi
-		echo "state $1: $desc"
-	fi
-	unset base_state state_modifier desc
+        if [[ -z $state_modifier ]]; then
+            desc="$base_state"
+        else
+            desc="$base_state ($state_modifier)"
+        fi
+        echo "state $1: $desc"
+    fi
+    unset base_state state_modifier desc
 }
 
 # snap clutters up df listings SO MUCH
 dff() {
-	if [[ -z "$@" ]]; then
-		bash -c 'df -h | grep -v /snap/'
-	else
-		bash -c "df $@"
-	fi
+    if [[ -z "$*" ]]; then
+        bash -c 'df -h | grep -v /snap/'
+    else
+        bash -c "df $*"
+    fi
 }
 
 # awscli works with DO, except can't change endpoint in config
 awsdo() {
-	aws --endpoint https://fra1.digitaloceanspaces.com $@
+    aws --endpoint https://fra1.digitaloceanspaces.com "$@"
+}
+
+o() {
+    if [ $# -eq 0 ]; then
+        xdg-open . >/dev/null 2>&1
+    else
+        xdg-open "$@" >/dev/null 2>&1
+    fi
+}
+
+man() {
+    env \
+        LESS_TERMCAP_mb="$(printf '\e[1;31m')" \
+        LESS_TERMCAP_md="$(printf '\e[1;31m')" \
+        LESS_TERMCAP_me="$(printf '\e[0m')" \
+        LESS_TERMCAP_se="$(printf '\e[0m')" \
+        LESS_TERMCAP_so="$(printf '\e[1;44;33m')" \
+        LESS_TERMCAP_ue="$(printf '\e[0m')" \
+        LESS_TERMCAP_us="$(printf '\e[1;32m')" \
+        man "$@"
+}
+
+isup() {
+    local uri=$1
+
+    if curl -sILf "$uri" >/dev/null; then
+        notify-send --urgency=low "$uri is up"
+    else
+        notify-send --urgency=critical "$uri is down"
+    fi
+}
+
+ssh_fingerprint() {
+    pubkey=${1:-${HOME}/.ssh/id_rsa.pub}
+    if [[ -f $pubkey ]]; then
+        ssh-keygen -l -E md5 -f "$pubkey"
+    else
+        echo "Couldn't find pub key: $pubkey"
+        return 1
+    fi
+}
+
+get_host() {
+    [ -n "$1" ] || bail "give a hostname/IP"
+    tmp_file=$(mktemp)
+    tmp_new=${tmp_file}_new
+    ssh-keyscan "$1" >"$tmp_file" 2>/dev/null
+    [[ $(wc -l "$tmp_file" | cut -f1 -d' ') -gt 0 ]] || bail "got no keys from $1"
+    grep -vFf ~/.ssh/known_hosts "$tmp_file" >"$tmp_new"
+    if [[ -s $tmp_new ]]; then
+        cat "$tmp_new" >>~/.ssh/known_hosts
+    else
+        echo "No new keys from $1"
+    fi
+    # rm "$tmp_file" "$tmp_new"
+}
+
+ra_ssh() {
+    get_host "$1"
+    ssh -i ~/.ssh/id_revapp "root@$1"
 }
