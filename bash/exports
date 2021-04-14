@@ -5,8 +5,8 @@ export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_DATA_DIRS=/usr/share/ubuntu:/usr/local/share:/usr/share:/var/lib/snapd/desktop
 
 # general
-export LANG="en_US.UTF-8"
-export LC_ALL="en_US.UTF-8"
+export LANG="en_US.utf8"
+export LC_ALL="en_US.utf8"
 export PAGER=less
 export MANPAGER="less -X"
 export EDITOR=vim
@@ -14,6 +14,7 @@ export EDITOR=vim
 # python
 export PYTHONPATH=$HOME/lib/python
 export PIPENV_VENV_IN_PROJECT=1
+export PIPENV_SPINNER=arrow3
 
 # go stuff
 export GOPATH=$HOME/go

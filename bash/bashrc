@@ -6,7 +6,6 @@ load_extras() {
         echo "cannot source nothing, something went wrong in bashrc"
     else
         for supp_file in "$supp_dir/$1"*; do
-            echo "$supp_file"
             # shellcheck source=/dev/null
             [[ -f $supp_file ]] && source "$supp_file"
         done
