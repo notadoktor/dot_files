@@ -1,14 +1,15 @@
 # shellcheck shell=bash
 supp_dir="$HOME/.bash_extras"
-supp_files=(exports functions aliases secrets completions local_settings)
+supp_files=(exports functions aliases completions secrets local_settings)
 
 load_extras() {
     if [[ -z "$1" ]]; then
         echo "cannot source nothing, something went wrong in bashrc"
     else
-        supp_file="$supp_dir/$1"
-        # shellcheck source=/dev/null
-        [[ -f $supp_file ]] && source "$supp_file"
+        for supp_file in "$supp_dir/$1"*; do
+            # shellcheck source=/dev/null
+            [[ -f $supp_file ]] && source "$supp_file"
+        done
     fi
 }
 

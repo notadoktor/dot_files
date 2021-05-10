@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 
 bail() {
-    [[ -n $1 ]] && echo "$1"
+    [[ -n "$*" ]] && echo "$@"
     exit 1
 }
 
@@ -20,7 +20,7 @@ abs_dirname() {
         # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
         [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
     done
-    cd -P "$(dirname "$SOURCE")" && pwd
+    (cd -P "$(dirname "$SOURCE")" && pwd && cd "$OLDPWD") || bail "cd to or from $SOURCE failed"
 }
 
 cmkdir() {
@@ -65,13 +65,26 @@ g() {
 }
 
 moo() {
-    export LANG="en_US.UTF-8"
+    for req in cowsay fortune; do
+        if ! which $req >/dev/null 2>&1; then
+            bail "No $req, cannot moo"
+        fi
+    done
+    FTYPE=${FTYPE:-bofh-excuses}
+    if ! fortune -f 2>&1 | grep -q "$FTYPE"; then
+        FTYPE=
+    fi
+    # LANG must be exported as something with utf8 for some special characters to print
     ESTR='o=X$@*-O.¿¡'
     TSTR='    UV^Ü'
     E=${ESTR:$(($(tr -cd 0-9 </dev/urandom | head -c 2) % ${#ESTR})):1}
     T=${TSTR:$(($(tr -cd 0-9 </dev/urandom | head -c 2) % ${#TSTR})):1}
-    fortune bofh-excuses | /usr/games/cowsay -n -e "$E$E" -T "$T "
+    fortune "$FTYPE" | /usr/games/cowsay -n -e "$E$E" -T "$T "
     echo
+}
+
+mootrek() {
+    FTYPE=startrek moo
 }
 
 pcnt() {
@@ -80,10 +93,7 @@ pcnt() {
 }
 
 port_used() {
-    if [[ -z $1 ]]; then
-        echo "no port specified"
-        exit 1
-    fi
+    [[ -n $1 ]] || bail "no port specified"
     netstat -pnlt 2>/dev/null | grep -c ":$1\>"
 }
 
@@ -156,48 +166,48 @@ def_state() {
         echo "no state code specified"
     else
         case ${1:0:1} in
-            D)
-                base_state="uninterruptible sleep"
-                ;;
-            R)
-                base_state="running"
-                ;;
-            S)
-                base_state="interruptible sleep"
-                ;;
-            T)
-                base_state="stopped"
-                ;;
-            Z)
-                base_state="zombie"
-                ;;
-            *)
-                base_state="invalid code: ${1:0:1}"
-                ;;
+        D)
+            base_state="uninterruptible sleep"
+            ;;
+        R)
+            base_state="running"
+            ;;
+        S)
+            base_state="interruptible sleep"
+            ;;
+        T)
+            base_state="stopped"
+            ;;
+        Z)
+            base_state="zombie"
+            ;;
+        *)
+            base_state="invalid code: ${1:0:1}"
+            ;;
         esac
         if [[ -n ${1:1:1} ]]; then
             case ${1:1:1} in
-                "<")
-                    state_modifier="high priority"
-                    ;;
-                N)
-                    state_modifier="low priority"
-                    ;;
-                L)
-                    state_modifier="pages locked in memory"
-                    ;;
-                s)
-                    state_modifier="session leader"
-                    ;;
-                l)
-                    state_modifier="multi-threaded"
-                    ;;
-                +)
-                    state_modifier="foreground"
-                    ;;
-                *)
-                    state_modifier="invalid modifier: ${1:1:1}"
-                    ;;
+            "<")
+                state_modifier="high priority"
+                ;;
+            N)
+                state_modifier="low priority"
+                ;;
+            L)
+                state_modifier="pages locked in memory"
+                ;;
+            s)
+                state_modifier="session leader"
+                ;;
+            l)
+                state_modifier="multi-threaded"
+                ;;
+            +)
+                state_modifier="foreground"
+                ;;
+            *)
+                state_modifier="invalid modifier: ${1:1:1}"
+                ;;
             esac
         fi
 
