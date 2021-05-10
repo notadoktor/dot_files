@@ -1,4 +1,5 @@
 SHELL = /bin/bash
+HERE = $(shell dirname $(shell realpath -e $(lastword $(MAKEFILE_LIST))))
 
 .PHONY: help
 help:
@@ -8,11 +9,13 @@ help:
 
 .PHONY: bash
 EXTRAS_DIR ?= $(HOME)/.bash_extras
-bash:
-	ln -sfn . "$(EXTRAS_DIR)"
-	grep -q ". $(EXTRAS_DIR)" ~/.bashrc || echo "[[ -f $(EXTRAS_DIR)/bashrc ]] && . $(EXTRAS_DIR)/bashrc" >> $(HOME)/.bashrc
+bash: ## set up .bashrc files
+	@ln -sfn $(HERE)/bash "$(EXTRAS_DIR)"
+	@grep -qs "source $(EXTRAS_DIR)" ~/.bashrc || echo "[[ -f $(EXTRAS_DIR)/bashrc ]] && source $(EXTRAS_DIR)/bashrc" >> $(HOME)/.bashrc
+	@echo bash files have been set up successfully. open a new shell or exec bash to see changes
 
 .PHONY: git
-git:
-	[ -f $(HOME)/.gitconfig ] && mv $(HOME)/.gitconfig $(HOME)/.gitconfig.inc
-	ln -s $(PWD)/gitconfig $(HOME)/.gitconfig
+git: ## set up gitconfig
+	@if [[ ! -f $(HOME)/.gitconfig && ! -h $(HOME)/.gitconfig ]]; then mv -i $(HOME)/.gitconfig $(HOME)/.gitconfig.inc ; fi
+	@ln -sf $(HERE)/git/gitconfig $(HOME)/.gitconfig
+	@echo gitconfig has been set up. user specific settings can be placed in $(HOME)/.gitconfig.inc

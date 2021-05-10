@@ -24,6 +24,7 @@
     required = true
     clean = git-lfs clean -- %f
 
+# always use ssh
 [url "ssh://git@github.com/"]
     insteadOf = https://github.com/
 

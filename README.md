@@ -1,3 +1,3 @@
-# common dot files
+# common dot file settings
 
-Symlink files to `$HOME` with a `.` prefix
+Use `make help` or check the [Makefile](Makefile) to set up dot files
