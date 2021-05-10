@@ -1,14 +1,14 @@
 # shellcheck shell=bash
 supp_dir="$HOME/.bash_extras"
+supp_files=(exports functions aliases secrets completions local_settings)
 
 load_extras() {
     if [[ -z "$1" ]]; then
         echo "cannot source nothing, something went wrong in bashrc"
     else
-        for supp_file in "$supp_dir/$1"*; do
-            # shellcheck source=/dev/null
-            [[ -f $supp_file ]] && source "$supp_file"
-        done
+        supp_file="$supp_dir/$1"
+        # shellcheck source=/dev/null
+        [[ -f $supp_file ]] && source "$supp_file"
     fi
 }
 
@@ -17,7 +17,7 @@ shopt -s histappend
 shopt -s globstar
 
 # load exports first
-load_extras exports
+load_extras "${supp_files[0]}"
 
 # set up conda, if present
 if [[ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]]; then
@@ -27,32 +27,9 @@ if [[ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]]; then
 fi
 
 # load the rest
-for supp_type in functions aliases secrets; do
-    load_extras $supp_type
+for supp_type in "${supp_files[@]:1}"; do
+    load_extras "$supp_type"
 done
-
-# custom completions
-if [[ -d /etc/bash_completion.d/ ]]; then
-    for file in /etc/bash_completion.d/*; do
-        # shellcheck source=/dev/null
-        [[ -f $file ]] && source "$file"
-    done
-fi
-
-if which doctl >/dev/null 2>&1; then
-    # shellcheck source=/dev/null
-    source <(doctl completion bash)
-fi
-
-if which pip >/dev/null 2>&1; then
-    # shellcheck source=/dev/null
-    source <(pip completion --bash)
-fi
-
-if which aws >/dev/null 2>&1; then
-    # shellcheck source=/dev/null
-    complete -C aws_completer aws
-fi
 
 # stupid default umask
 umask 002

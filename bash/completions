@@ -1,0 +1,24 @@
+# shellcheck shell=bash
+
+# custom completions
+if [[ -d /etc/bash_completion.d/ ]]; then
+    for file in /etc/bash_completion.d/*; do
+        # shellcheck source=/dev/null
+        [[ -f $file ]] && source "$file"
+    done
+fi
+
+if which doctl >/dev/null 2>&1; then
+    # shellcheck source=/dev/null
+    source <(doctl completion bash)
+fi
+
+if which pip >/dev/null 2>&1; then
+    # shellcheck source=/dev/null
+    source <(pip completion --bash)
+fi
+
+if which aws >/dev/null 2>&1; then
+    # shellcheck source=/dev/null
+    complete -C aws_completer aws
+fi

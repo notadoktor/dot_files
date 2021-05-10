@@ -1,11 +1,12 @@
-# setup
+# bash settings
 
-Add the following to the end of your `~/.bashrc` file:
+## setup
 
-```bash
-### Load custom settings
+- Run `make bash` from repo root
+- Follow the steps in the Makefile to manually
 
-if [[ -f "$HOME/.bash_extras/bashrc" ]]; then
-    source "$HOME/.bash_extras/bashrc"
-fi
-```
+## customization
+
+You can add any personal/computer specific settings to a file called `local_settings` and it will
+be automatically loaded with the rest of the files. It will also be loaded last so will take
+priority over everything else.
