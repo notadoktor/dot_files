@@ -1,23 +1,66 @@
+# many settings below came from https://github.com/jessfraz/dotfiles
+
 [alias]
-	bname = branch --show-current
-    nb = switch -c                  # create and switch to a new branch - nb=new branch
-    co = switch
-    mt = mergetool
-    staged = diff --cached
-    amend = commit --amend
+    ### git-branch
+    bname = branch --show-current
+    nu = !git branch -u origin/$(git bname)
+
+    ### git-clone
+    # Clone a repository including all submodules
+    c = clone --recursive
+
+    ### git-commit / git-add / git-push
+    amend = commit --amend --reuse-message=HEAD
+    # Commit all changes
+    ca = !git add -A && git commit -av
     ff = pull --ff-only
-    lol = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
-    sup = !git push -u origin `git symbolic-ref --short HEAD`
-    nu = !git branch -u origin/$(git branch --show-current)
-    remotes = remote -v
-	#state = "!sh -c 'if [ $(git diff --name-only | wc -l) -ne 0 ]; then echo dirty; fi'"
-	state = ! [ $(git diff --name-only | wc -l) -ne 0 ] && echo dirty || true
-	hash = ! git describe --dirty --abbrev=8 --always | sed -e 's/.*g//'
+    # create local branch on remote (set upstream)
+    sup = !git push -u origin $(git symbolic-ref --short HEAD)
     unstage = reset --
+
+    ### git-diff
+    # Show the diff between the latest commit and the current state
+    d = !"git diff-index --quiet HEAD -- || clear; git --no-pager diff --patch-with-stat"
+    # `git di $number` shows the diff between the state `$number` revisions ago and the current state
+    di = !"d() { git diff --patch-with-stat HEAD~$1; }; git diff-index --quiet HEAD -- || clear; d"
+    staged = diff --cached
+
+    ### git-log
+    l = log --pretty=oneline -n 20 --graph --abbrev-commit
+    lol = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+    top = !git log --format=format:%an | sort | uniq -c | sort -r | head -n 20
+
+    ### git-rebase
     # Interactive rebase with the given number of latest commits
     reb = "!r() { git rebase -i HEAD~$1; }; r"
-    # Remove branches that have already been merged with master, a.k.a. ‘delete merged’
+
+    ### git-switch
+    # checkout an existing branch, an existing tag (detached HEAD), or create a new branch
+    co = "!f() { msg=$(git switch "$1" 2>&1 >/dev/null); test $? -eq 0 && exit ; test \"${msg#*branch is expected, got tag}\" != \"$msg\" && git switch --detach $1 || git switch -c $1; }; f"
+    # checkout a tag
+    tco = switch --detach
+
+    ### search git
+    # Find commits by commit message or source
+    fm = "!f() { git log --pretty=format:'%C(yellow)%h    %Cblue%ad  %Creset%s%Cgreen  [%cn] %Cred%d' --decorate --date=short --grep=$1; }; f"
+    fc = "!f() { git log --pretty=format:'%C(yellow)%h    %Cblue%ad  %Creset%s%Cgreen  [%cn] %Cred%d' --decorate --date=short -S$1; }; f"
+    # find branches or tags containing a given commit
+    fb = "!f() { git branch -a --contains $1; }; f"
+    ft = "!f() { git describe --always --contains $1; }; f"
+
+    ### housekeeping
+    # Remove branches that have already been merged with master a.k.a. ‘delete merged’
     dm = "!git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d; git remote -v update -p"
+
+    ### misc
+    remotes = remote -v
+    tags = tag -l
+    branches = branch -a
+    undo = !git reset HEAD~1 --mixed
+    alias = !git config -l | grep ^alias | cut -c 7- | sort
+    contributors = shortlog --summary --numbered
+    state = ! git describe --always --dirty | grep -o dirty || true
+    hash = ! git describe --dirty --abbrev=8 --always | sed -e 's/.*g//'
 
 [filter "lfs"]
     smudge = git-lfs smudge -- %f
@@ -32,6 +75,9 @@
 [credential]
     helper = cache --timeout=3600
 
+[help]
+    autoCorrect = -1
+
 [push]
     followTags = true
 
@@ -40,6 +86,10 @@
 
 [diff]
     renames = copies
+    wsErrorHighlight = all
+
+[fetch]
+    parallel = 0
 
 [color]
     ui = auto
@@ -61,11 +111,11 @@
     untracked = cyan
 
 [pull]
-	rebase = false
+ rebase = false
 
 [init]
-	defaultBranch = main
+    defaultBranch = main
 
-# store personal / user-specific settings 
+# store personal / user-specific settings
 [include]
     path = ~/.gitconfig.inc
