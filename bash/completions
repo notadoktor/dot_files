@@ -1,4 +1,4 @@
-# shellcheck shell=bash
+#!/bin/bash
 
 # custom completions
 if [[ -d /etc/bash_completion.d/ ]]; then

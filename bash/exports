@@ -1,4 +1,4 @@
-# shellcheck shell=bash
+#!/bin/bash
 
 # XDG defaults
 export XDG_DATA_HOME="$HOME/.local/share"
@@ -20,10 +20,9 @@ export PIPENV_SPINNER=arrow3
 export GOPATH=$HOME/go
 export GOBIN=$GOPATH/bin
 export GO111MODULE=auto
+[ -d "$GOBIN" ] && export PATH="$GOBIN:$PATH"
 
 # bash
-export PATH="$GOBIN:$PATH"
-export CDPATH=:/data/playground
 export HISTSIZE=50000000
 export HISTFILESIZE=$HISTSIZE
 export HISTCONTROL=ignoredups
@@ -34,6 +33,7 @@ export DOCKER_BUILDKIT=1
 # flatpak
 if which flatpak >/dev/null 2>&1; then
     FLATPAK_XDG_DATA_DIRS="/var/lib/flatpak/exports/share:$XDG_DATA_HOME/flatpak/exports/share"
+    # prevent duplication when running `exec bash` to refresh shell env
     if ! [[ "$XDG_DATA_DIRS" =~ :$FLATPAK_XDG_DATA_DIRS ]]; then
         export XDG_DATA_DIRS="$XDG_DATA_DIRS:$FLATPAK_XDG_DATA_DIRS"
     fi

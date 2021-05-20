@@ -1,4 +1,5 @@
-# shellcheck shell=bash
+#!/bin/bash
+
 supp_dir="$HOME/.bash_extras"
 supp_files=(exports functions aliases completions secrets local_settings)
 

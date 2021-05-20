@@ -1,4 +1,4 @@
-# shellcheck shell=bash
+#!/bin/bash
 
 # basic
 alias cd='>/dev/null cd' # make CDPATH shut up
