@@ -1,9 +1,5 @@
 # custom and secret bash files
-bash/exports_*
-bash/functions_*
-bash/aliases_*
-bash/completions_*
-bash/local_settings*
+bash/*_*
 bash/secrets*
 
 *.swp

@@ -33,8 +33,5 @@ for supp_type in "${supp_files[@]:1}"; do
     load_extras "$supp_type"
 done
 
-# stupid default umask
-umask 002
-
 # shellcheck source=/dev/null
-[[ -f $HOME/liquidprompt/liquidprompt ]] && [[ $- = *i* ]] && source "$HOME/liquidprompt/liquidprompt"
+[[ -f $HOME/liquidprompt/liquidprompt && $- = *i* ]] && source "$HOME/liquidprompt/liquidprompt"
