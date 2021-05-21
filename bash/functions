@@ -1,52 +1,82 @@
 #!/bin/bash
 
-bail() {
-    [[ -n "$*" ]] && echo "$@"
-    exit 1
+log() {
+    echo "$(date +'%Y-%m-%d %H:%M:%S') - $*"
 }
 
-# works on MacOS and other *nix, more complicated because macs are afraid of readlink
-abs_dirname() {
-    if [[ -z $1 ]]; then
-        SOURCE="${BASH_SOURCE[0]}"
-    else
-        SOURCE=$1
-    fi
+err() {
+    echo -e "\e[31mERROR\e[0m: ${FUNCNAME[1]}: $*"
+    return 1
+}
 
-    # resolve $SOURCE until the file is no longer a symlink
-    while [ -h "$SOURCE" ]; do
-        DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-        SOURCE="$(readlink "$SOURCE")"
-        # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-        [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-    done
-    (cd -P "$(dirname "$SOURCE")" && pwd && cd "$OLDPWD") || bail "cd to or from $SOURCE failed"
+# works on MacOS and other *nix, more complicated because macs are afraid of readlink/realpath
+resolve_path() {
+    if [[ $# -eq 0 ]]; then
+        err "no path specified"
+        return 1
+    fi
+    SOURCE="$*"
+
+    if which python3 >/dev/null; then
+        # pathlib is best
+        FPATH=$(python3 -c "import pathlib;p=pathlib.Path('$SOURCE');print(p.resolve())")
+        if [[ ! -e $FPATH ]]; then
+            err "$SOURCE does not exist"
+        else
+            echo "$FPATH"
+        fi
+    else
+        # resolve $SOURCE until the file is no longer a symlink
+        while [[ -L "$SOURCE" ]]; do
+            DIR=$(cd -P "$(dirname "$SOURCE")" && pwd)
+            SOURCE=$(readlink "$SOURCE")
+            # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+            [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+        done
+        if [[ -d "$SOURCE" ]]; then
+            SDIR=$SOURCE
+            SFILE=
+        else
+            SDIR=$(dirname "$SOURCE")
+            SFILE=$(basename "$SOURCE")
+        fi
+        pushd "$SDIR" >/dev/null || (
+            err "cd to $SDIR failed"
+            return 1
+        )
+        FPATH=$(pwd -P)/$SFILE
+        popd >/dev/null || (
+            err "cd from $SDIR failed"
+            return 1
+        )
+        echo "$FPATH"
+    fi
 }
 
 cmkdir() {
     [ -d "$1" ] || mkdir -p "$1" || (
-        echo "mkdir failed: $1"
-        exit 1
+        err "mkdir failed: $1"
+        return 1
     )
     cd "$1" || (
-        echo "cd failed: $1"
-        exit 1
+        err "cd failed: $1"
+        return 1
     )
 }
 
 # run basic check on perl/python scripts before uploading
 cscp() {
     if [[ -z $1 ]]; then
-        echo "No file specified"
-        exit 1
+        err "No file specified"
+        return 1
     else
         FNAME=$1
         FEXT=${FNAME:(-3)}
     fi
 
     if [[ -z $2 ]]; then
-        echo "No destination specified"
-        exit 1
+        err "No destination specified"
+        return 1
     else
         DEST=$2
     fi
@@ -61,13 +91,18 @@ cscp() {
 }
 
 g() {
-    git status >/dev/null 2>&1 && git status -sb || echo "not in a git repo"
+    if git rev-parse 2>/dev/null; then
+        git status -sb
+    else
+        err "not in a git repo"
+    fi
 }
 
 moo() {
     for req in cowsay fortune; do
         if ! which $req >/dev/null 2>&1; then
-            bail "No $req, cannot moo"
+            err "No $req, cannot moo"
+            return 1
         fi
     done
     FTYPE=${FTYPE:-bofh-excuses}
@@ -93,17 +128,19 @@ pcnt() {
 }
 
 port_used() {
-    [[ -n $1 ]] || bail "no port specified"
+    if [[ -z $1 ]]; then
+        err "no port specified"
+        return 1
+    fi
     netstat -pnlt 2>/dev/null | grep -c ":$1\>"
 }
 
 pps() {
     SUBP=$(pgrep "$1")
     if [[ -z $SUBP ]]; then
-        echo "No '$1' processes found"
+        err "No '$1' processes found"
     else
-        # shellcheck disable=2086
-        ps wwu $SUBP
+        ps wwu "$SUBP"
     fi
 }
 
@@ -113,6 +150,7 @@ tun() {
         echo
         echo "tun < hostname > [ portnum ]"
         echo
+        return 1
     elif [[ "$1" == "list" ]]; then
         tunlist
     else
@@ -122,11 +160,11 @@ tun() {
         if [[ $(pps ssh | grep -wc "$TUN_HOST") -gt 0 ]]; then
             CURR_PORT=$(pps ssh | grep -w "$TUN_HOST" | grep -owP -- "-D \d+" 2>/dev/null | cut -f2 -d' ')
             if [[ -n $CURR_PORT ]]; then
-                echo "Tunnel to $TUN_HOST already exists on port $CURR_PORT"
+                err "Tunnel to $TUN_HOST already exists on port $CURR_PORT"
             fi
         elif [[ -n $TUN_PORT ]] && [[ $(port_used "$TUN_PORT") -gt 0 ]]; then
             CURR_TUN=$(pps ssh | grep -w -- "-D $TUN_PORT" | perl -lane 'print pop @F')
-            echo "Can't create tunnel to $TUN_HOST, tunnel to $CURR_TUN already running on $TUN_PORT"
+            err "Can't create tunnel to $TUN_HOST, tunnel to $CURR_TUN already running on $TUN_PORT"
         else
             TUN_PORT=${TUN_PORT:-$DEF_PORT}
             PORT_IN_USE=$(port_used "$TUN_PORT")
@@ -137,7 +175,7 @@ tun() {
             ssh -D $TUN_PORT -fCqN "$TUN_HOST"
             ERR_CODE=$?
             if [[ $ERR_CODE -ne 0 ]]; then
-                echo "Error setting up tunnel to $TUN_HOST: $ERR_CODE"
+                err "Error setting up tunnel to $TUN_HOST: $ERR_CODE"
             else
                 # echo -e "\$?: $?\n\$!: $!"
                 echo "Tunnel to $TUN_HOST created on port $TUN_PORT"
@@ -152,62 +190,63 @@ tunlist() {
 
 docker-ip() {
     if [[ -z $1 ]]; then
-        echo "no container ID/name specified"
+        err "no container ID/name specified"
     elif [[ $(docker ps | grep -wc "$1") != "1" ]]; then
-        echo "invalid container ID/name specified"
+        err "invalid container ID/name specified"
     else
         docker inspect "$1" | jq -r '.[0].NetworkSettings.IPAddress'
     fi
 }
 
 # I can never remember ps state codes
-def_state() {
+ps_state() {
     if [[ -z $1 ]]; then
-        echo "no state code specified"
+        err "no state code specified"
     else
+        local base_state state_modifier desc
         case ${1:0:1} in
-        D)
-            base_state="uninterruptible sleep"
-            ;;
-        R)
-            base_state="running"
-            ;;
-        S)
-            base_state="interruptible sleep"
-            ;;
-        T)
-            base_state="stopped"
-            ;;
-        Z)
-            base_state="zombie"
-            ;;
-        *)
-            base_state="invalid code: ${1:0:1}"
-            ;;
+            D)
+                base_state="uninterruptible sleep"
+                ;;
+            R)
+                base_state="running"
+                ;;
+            S)
+                base_state="interruptible sleep"
+                ;;
+            T)
+                base_state="stopped"
+                ;;
+            Z)
+                base_state="zombie"
+                ;;
+            *)
+                base_state="invalid code: ${1:0:1}"
+                ;;
         esac
         if [[ -n ${1:1:1} ]]; then
             case ${1:1:1} in
-            "<")
-                state_modifier="high priority"
-                ;;
-            N)
-                state_modifier="low priority"
-                ;;
-            L)
-                state_modifier="pages locked in memory"
-                ;;
-            s)
-                state_modifier="session leader"
-                ;;
-            l)
-                state_modifier="multi-threaded"
-                ;;
-            +)
-                state_modifier="foreground"
-                ;;
-            *)
-                state_modifier="invalid modifier: ${1:1:1}"
-                ;;
+                "<")
+                    state_modifier="high priority"
+                    ;;
+                N)
+                    state_modifier="low priority"
+                    ;;
+                L)
+                    state_modifier="pages locked in memory"
+                    ;;
+                s)
+                    state_modifier="session leader"
+                    ;;
+                l)
+                    state_modifier="multi-threaded"
+                    ;;
+                +)
+                    state_modifier="foreground"
+                    ;;
+                *)
+                    state_modifier="invalid modifier: ${1:1:1}"
+                    ;;
             esac
         fi
 
@@ -218,7 +257,6 @@ def_state() {
         fi
         echo "state $1: $desc"
     fi
-    unset base_state state_modifier desc
 }
 
 # snap clutters up df listings SO MUCH
@@ -226,7 +264,7 @@ dff() {
     if [[ -z "$*" ]]; then
         command df -h | grep -v /snap/
     else
-        command df "$*"
+        command df "$@"
     fi
 }
 
@@ -272,23 +310,42 @@ ssh_fingerprint() {
     if [[ -f $pubkey ]]; then
         ssh-keygen -l -E md5 -f "$pubkey"
     else
-        echo "Couldn't find pub key: $pubkey"
-        return 1
+        err "Couldn't find pub key: $pubkey"
     fi
 }
 
-# update known_hosts automatically for trusted hosts so ssh doesn't prompt for verification
-get_host() {
-    [ -n "$1" ] || bail "give a hostname/IP"
-    tmp_file=$(mktemp)
-    tmp_new=${tmp_file}_new
-    ssh-keyscan "$1" >"$tmp_file" 2>/dev/null
-    [[ $(wc -l "$tmp_file" | cut -f1 -d' ') -gt 0 ]] || bail "got no keys from $1"
-    grep -vFf ~/.ssh/known_hosts "$tmp_file" >"$tmp_new"
-    if [[ -s $tmp_new ]]; then
-        cat "$tmp_new" >>~/.ssh/known_hosts
-    else
-        echo "No new keys from $1"
+# zero-based string index of first substring
+index() {
+    if [[ $# -ne 2 ]]; then
+        err "receieved $# args but expected 2"
+        echo "usage: ${FUNCNAME[0]} some_str sub_str"
+        return 1
     fi
-    # rm "$tmp_file" "$tmp_new"
+    local idx
+    # shellcheck disable=2003
+    idx=$(expr index "$1" "$2")
+    if [[ $idx -eq 0 ]]; then
+        # no match
+        echo "-1"
+        return 255
+    fi
+    echo $((idx - 1))
+}
+
+# zero-based string index of last substring
+rindex() {
+    if [[ $# -ne 2 ]]; then
+        err "receieved $# args but expected 2"
+        echo "usage: ${FUNCNAME[0]} some_str sub_str"
+        return 1
+    fi
+    # shellcheck disable=2003
+    idx=$(index "$(echo "$1" | rev)" "$(echo "$2" | rev)")
+    if [[ $idx -eq -1 ]]; then
+        # no match
+        echo "-1"
+        return 255
+    else
+        echo $((${#1} - idx - 1))
+    fi
 }
