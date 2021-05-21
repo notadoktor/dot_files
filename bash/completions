@@ -1,5 +1,7 @@
 #!/bin/bash
 
+HERE=$(dirname "$(resolve_path "${BASH_SOURCE[0]}")")
+
 # custom completions
 if [[ -d /etc/bash_completion.d/ ]]; then
     for file in /etc/bash_completion.d/*; do
@@ -8,17 +10,21 @@ if [[ -d /etc/bash_completion.d/ ]]; then
     done
 fi
 
-if which doctl >/dev/null 2>&1; then
-    # shellcheck source=/dev/null
-    source <(doctl completion bash)
-fi
+declare -A comp
+comp[doctl]="doctl completion bash"
+comp[pip]="pip completion --bash"
+# shellcheck disable=2089
+comp[aws]="echo complete -C aws_completer aws"
 
-if which pip >/dev/null 2>&1; then
-    # shellcheck source=/dev/null
-    source <(pip completion --bash)
-fi
+# pip and doctl
+for comp_name in ${!comp[*]}; do
+    # shellcheck disable=2065
+    test which "$comp_name" >/dev/null 2>&1 || continue
 
-if which aws >/dev/null 2>&1; then
+    comp_file="$HERE/completions_${comp_name}"
+    if [[ ! -e "$comp_file" ]]; then
+        ${comp[$comp_name]} >"$comp_file"
+    fi
     # shellcheck source=/dev/null
-    complete -C aws_completer aws
-fi
+    source "$comp_file"
+done
