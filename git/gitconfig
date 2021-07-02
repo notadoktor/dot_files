@@ -37,10 +37,12 @@
 
     ### git-switch
     # checkout an existing branch, an existing tag (detached HEAD), or create a new branch
-    co = "!f() { msg=$(git switch "$1" 2>&1 >/dev/null); test $? -eq 0 && exit ; test \"${msg#*branch is expected, got tag}\" != \"$msg\" && git switch --detach $1 || git switch -c $1; }; f"
+    # try and fix later maybe
+    # co = "!f() { msg=$(git switch "$1" 2>&1 >/dev/null); test $? -eq 0 && exit ; test \"${msg#*branch is expected, got tag}\" != \"$msg\" && git switch --detach $1 || git switch -c $1; }; f"
+    co = switch
     # checkout a tag
     tco = switch --detach
-    rco = "!f() { [[ $# -eq 2 ]] || (echo must specify branch and remote name; exit 1); git branch | grep -qw "$1" && (git switch "$1" || exit $?) || git switch -c "$1" "$2/$1" ; }; f"
+    # rco = "!f() { [[ $# -eq 2 ]] || (echo must specify branch and remote name; exit 1); git branch | grep -qw "$1" && (git switch "$1" || exit $?) || git switch -c "$1" "$2/$1" ; }; f"
 
     ### search git
     # Find commits by commit message or source
