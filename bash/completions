@@ -2,9 +2,13 @@
 
 HERE=$(dirname "$(resolve_path "${BASH_SOURCE[0]}")")
 
-# custom completions
+# things I don't need / or aren't working nicely
+IGNORE_COMPLETIONS=" fcoeadm fcoemon lldptool lldpad "
 if [[ -d /etc/bash_completion.d/ ]]; then
-    for file in /etc/bash_completion.d/*; do
+    for file in /etc/bash_completion.d/lldptool /etc/bash_completion.d/* /etc/bash_completion.d/fcoeadm; do
+        if [[ "${IGNORE_COMPLETIONS/ $(basename "$file") /}" != "$IGNORE_COMPLETIONS" ]]; then
+            continue
+        fi
         # shellcheck source=/dev/null
         [[ -f $file ]] && source "$file"
     done
