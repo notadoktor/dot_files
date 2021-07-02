@@ -4,7 +4,8 @@
 alias cd='>/dev/null cd' # make CDPATH shut up
 alias grep='grep --color'
 alias ls='ls --color'
-alias ll='ls -lAF'
+alias ll='ls -lF'
+alias l.='ls -laF'
 alias scp='scp -r'
 
 # common typos

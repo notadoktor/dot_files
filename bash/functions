@@ -64,6 +64,10 @@ cmkdir() {
     )
 }
 
+cmktemp() {
+    cd "$(mktemp -d "$@")" || return $?
+}
+
 # run basic check on perl/python scripts before uploading
 cscp() {
     if [[ -z $1 ]]; then
@@ -145,14 +149,12 @@ pps() {
 }
 
 tun() {
-    if [[ -z $1 ]]; then
+    if [[ $# -eq 0 || $# -gt 2 ]]; then
         echo "You must specify where to tunnel"
         echo
         echo "tun < hostname > [ portnum ]"
         echo
         return 1
-    elif [[ "$1" == "list" ]]; then
-        tunlist
     else
         DEF_PORT=8080
         TUN_HOST=$1

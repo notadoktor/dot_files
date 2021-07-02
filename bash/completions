@@ -10,7 +10,7 @@ if [[ -d /etc/bash_completion.d/ ]]; then
     done
 fi
 
-declare -A comp
+declare -A comp check
 comp[doctl]="doctl completion bash"
 comp[pip]="pip completion --bash"
 # shellcheck disable=2089
@@ -18,8 +18,12 @@ comp[aws]="echo complete -C aws_completer aws"
 
 # pip and doctl
 for comp_name in ${!comp[*]}; do
-    # shellcheck disable=2065
-    test which "$comp_name" >/dev/null 2>&1 || continue
+    if [[ -n ${check["$comp_name"]} ]]; then
+        cmd_check="${check[$comp_name]}"
+    else
+        cmd_check=(which "$comp_name")
+    fi
+    test "${cmd_check[@]}" >&/dev/null 2>&1 || continue
 
     comp_file="$HERE/completions_${comp_name}"
     if [[ ! -e "$comp_file" ]]; then
