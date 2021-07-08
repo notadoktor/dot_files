@@ -4,15 +4,18 @@ HERE=$(dirname "$(resolve_path "${BASH_SOURCE[0]}")")
 
 # things I don't need / or aren't working nicely
 IGNORE_COMPLETIONS=" fcoeadm fcoemon lldptool lldpad "
-if [[ -d /etc/bash_completion.d/ ]]; then
-    for file in /etc/bash_completion.d/lldptool /etc/bash_completion.d/* /etc/bash_completion.d/fcoeadm; do
-        if [[ "${IGNORE_COMPLETIONS/ $(basename "$file") /}" != "$IGNORE_COMPLETIONS" ]]; then
-            continue
-        fi
-        # shellcheck source=/dev/null
-        [[ -f $file ]] && source "$file"
-    done
-fi
+COMP_DIRS=(/etc/bash_completion.d "$HOME/.bash_completion.d")
+for comp_dir in "${COMP_DIRS[@]}"; do
+    if [[ -d "$comp_dir" ]]; then
+        for file in "$comp_dir/"*; do
+            if [[ "${IGNORE_COMPLETIONS/ $(basename "$file") /}" != "${IGNORE_COMPLETIONS}" ]]; then
+                continue
+            fi
+            # shellcheck source=/dev/null
+            [[ -f $file ]] && source "$file"
+        done
+    fi
+done
 
 declare -A comp check
 comp[doctl]="doctl completion bash"
