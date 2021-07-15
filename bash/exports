@@ -22,6 +22,10 @@ export GOBIN=$GOPATH/bin
 export GO111MODULE=auto
 [ -d "$GOBIN" ] && export PATH="$GOBIN:$PATH"
 
+# rust
+# shellcheck disable=1091
+[ -d "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+
 # bash
 export HISTSIZE=50000000
 export HISTFILESIZE=$HISTSIZE
