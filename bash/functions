@@ -9,6 +9,21 @@ err() {
     return 1
 }
 
+# checks for existence of first param in list of everything afterwards
+# not whitespace friendly
+in_filter() {
+    local new_str=$1
+    local existing_str=" ${*:2} "
+    case "$existing_str" in
+        *" $new_str "*)
+            true
+            ;;
+        *)
+            false
+            ;;
+    esac
+}
+
 # works on MacOS and other *nix, more complicated because macs are afraid of readlink/realpath
 resolve_path() {
     if [[ $# -eq 0 ]]; then

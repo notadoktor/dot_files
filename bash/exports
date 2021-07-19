@@ -1,5 +1,18 @@
 #!/bin/bash
 
+update_path() {
+    # only updates PATH if directory is not already there
+    local new_path
+    new_path=$1
+    case ":$PATH:" in
+        *:"$new_path":*) ;;
+
+        *)
+            export PATH="$new_path:$PATH"
+            ;;
+    esac
+}
+
 # XDG defaults
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_DATA_DIRS=/usr/share/ubuntu:/usr/local/share:/usr/share:/var/lib/snapd/desktop
@@ -10,6 +23,9 @@ export LC_ALL="en_US.utf8"
 export PAGER=less
 export MANPAGER="less -X"
 export EDITOR=vim
+for user_bin in "$HOME/bin" "$HOME/.local/bin"; do
+    [[ -d "$user_bin" ]] && update_path "$user_bin"
+done
 
 # python
 export PYTHONPATH=$HOME/lib/python
@@ -20,11 +36,12 @@ export PIPENV_SPINNER=arrow3
 export GOPATH=$HOME/go
 export GOBIN=$GOPATH/bin
 export GO111MODULE=auto
-[ -d "$GOBIN" ] && export PATH="$GOBIN:$PATH"
+for go_bin in /usr/local/go/bin "$GOBIN"; do
+    [[ -d "$go_bin" ]] && update_path "$go_bin"
+done
 
 # rust
-# shellcheck disable=1091
-[ -d "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+[ -d "$HOME/.cargo/bin" ] && update_path "$HOME/.cargo/bin"
 
 # bash
 export HISTSIZE=50000000
@@ -42,3 +59,7 @@ if which flatpak >/dev/null 2>&1; then
         export XDG_DATA_DIRS="$XDG_DATA_DIRS:$FLATPAK_XDG_DATA_DIRS"
     fi
 fi
+
+# nix
+# shellcheck source=/dev/null
+[[ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ]] && . "$HOME/.nix-profile/etc/profile.d/nix.sh"
