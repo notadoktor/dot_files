@@ -287,7 +287,29 @@ dff() {
 
 # awscli works with DO, except can't change endpoint in config
 awsdo() {
-    aws --endpoint https://fra1.digitaloceanspaces.com "$@"
+    local region=${DO_REGION:-fra1}
+    aws --endpoint "https://$region.digitaloceanspaces.com" "$@"
+}
+
+dawsdo() {
+    local local_creds=${AWS_SHARED_CREDENTIALS_FILE:-$HOME/.aws/credentials}
+    local docker_creds=/opt/creds
+    local workdir=/workdir
+    local version=${AWSCLI_VERSION:-latest}
+    local region=${DO_REGION:-fra1}
+    if [[ ! -f "$local_creds" ]]; then
+        err "No AWS creds file at $local_creds"
+    else
+        docker run --rm -it \
+            -v "$local_creds:$docker_creds" \
+            -v "$PWD:$workdir" \
+            --user "$(id -u)" \
+            -w "$workdir" \
+            -e "AWS_SHARED_CREDENTIALS_FILE=$docker_creds" \
+            "amazon/aws-cli:$version" \
+            --endpoint "https://$region.digitaloceanspaces.com" \
+            "$@"
+    fi
 }
 
 # use default UI app to open a given file/location
