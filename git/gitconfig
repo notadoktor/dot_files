@@ -120,6 +120,6 @@
 [init]
     defaultBranch = main
 
-# store personal / user-specific settings
+# store personal / user-specific settings in .inc
 [include]
     path = ~/.gitconfig.inc
