@@ -12,8 +12,7 @@
 
     ### git-commit / git-add / git-push
     amend = commit --amend --reuse-message=HEAD
-    amend-tracked = !"git add -u && git amend"
-    amend-all = !"git add -A && git amend"
+    amend-all = !"git add -u && git amend"
     # Commit all changes
     ca = !git add -A && git commit -av
     ff = pull --ff-only
