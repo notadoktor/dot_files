@@ -155,11 +155,12 @@ port_used() {
 }
 
 pps() {
-    SUBP=$(pgrep "$1")
-    if [[ -z $SUBP ]]; then
-        err "No '$1' processes found"
+    local SUBP
+    mapfile -t SUBP < <(pgrep "$1")
+    if [[ -n "${SUBP[*]}" ]]; then
+        ps wwu "${SUBP[@]}"
     else
-        ps wwu "$SUBP"
+        err "No '$1' processes found"
     fi
 }
 
