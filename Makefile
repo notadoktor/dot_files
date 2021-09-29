@@ -16,6 +16,6 @@ bash: ## set up .bashrc files
 
 .PHONY: git
 git: ## set up gitconfig
-	@if [[ ! -f $(HOME)/.gitconfig && ! -h $(HOME)/.gitconfig ]]; then mv -i $(HOME)/.gitconfig $(HOME)/.gitconfig.inc ; fi
+	@if [[ -f $(HOME)/.gitconfig && ! -h $(HOME)/.gitconfig ]]; then mv -i $(HOME)/.gitconfig $(HOME)/.gitconfig.inc ; fi
 	@ln -sf $(HERE)/git/gitconfig $(HOME)/.gitconfig
 	@echo gitconfig has been set up. user specific settings can be placed in $(HOME)/.gitconfig.inc
