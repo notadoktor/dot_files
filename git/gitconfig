@@ -124,3 +124,5 @@
 # store personal / user-specific settings in .inc
 [include]
     path = ~/.gitconfig.inc
+[rerere]
+	enabled = true
