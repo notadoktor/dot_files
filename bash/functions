@@ -3,6 +3,7 @@
 log() {
     echo "$(date +'%Y-%m-%d %H:%M:%S') - $*"
 }
+export -f log
 
 err() {
     echo -e "\e[31mERROR\e[0m: ${FUNCNAME[1]}: $*"
@@ -78,6 +79,7 @@ cmkdir() {
         return 1
     )
 }
+export -f cmkdir
 
 cmktemp() {
     cd "$(mktemp -d "$@")" || return $?
@@ -142,12 +144,13 @@ mootrek() {
 }
 
 pcnt() {
+    local CNT=0
     CNT=$(pgrep -P $$ | wc -l)
     echo $((CNT - 1))
 }
 
 port_used() {
-    if [[ -z $1 ]]; then
+    if [[ -z $* ]]; then
         err "no port specified"
         return 1
     fi
@@ -361,16 +364,19 @@ index() {
         echo "usage: ${FUNCNAME[0]} some_str sub_str"
         return 1
     fi
-    local idx
-    # shellcheck disable=2003
-    idx=$(expr index "$1" "$2")
-    if [[ $idx -eq 0 ]]; then
-        # no match
-        echo "-1"
+    local target_str=$1
+    local substr=$2
+    # remove from leftmost substr to end of string
+    local str_diff=${target_str%%$substr*}
+
+    if [[ "$str_diff" == "$target_str" ]]; then
+        echo -1
         return 255
+    else
+        echo ${#str_diff}
     fi
-    echo $((idx - 1))
 }
+export -f index
 
 # zero-based string index of last substring
 rindex() {
@@ -379,13 +385,16 @@ rindex() {
         echo "usage: ${FUNCNAME[0]} some_str sub_str"
         return 1
     fi
-    # shellcheck disable=2003
-    idx=$(index "$(echo "$1" | rev)" "$(echo "$2" | rev)")
-    if [[ $idx -eq -1 ]]; then
-        # no match
-        echo "-1"
+    local target_str=$1
+    local substr=$2
+    # remove rightmost substr
+    local str_diff=${target_str%$substr*}
+
+    if [[ "$str_diff" == "$target_str" ]]; then
+        echo -1
         return 255
     else
-        echo $((${#1} - idx - 1))
+        echo ${#str_diff}
     fi
 }
+export -f rindex
