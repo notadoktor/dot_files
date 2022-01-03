@@ -281,7 +281,7 @@ ps_state() {
 }
 
 # snap clutters up df listings SO MUCH
-dff() {
+df() {
     if [[ -z "$*" ]]; then
         command df -h | grep -v /snap/
     else
@@ -398,3 +398,28 @@ rindex() {
     fi
 }
 export -f rindex
+
+# check if sudo is needed to to write to the given file/dir
+need_sudo() {
+    local target=$1
+    local stat_resp privs dir_gname dir_uname user_groups
+    # octal permissions, group name, user name
+    read -ra stat_resp < <(stat -Lc "0%a %G %U" "$target")
+    privs=${stat_resp[0]}
+    dir_gname=${stat_resp[1]}
+    dir_uname=${stat_resp[2]}
+    if ((EUID == 0)); then
+        false
+    elif ((privs & 0002)); then
+        # world writable
+        false
+    elif ((privs & 0020)); then
+        # group writable, is user in that group?
+        mapfile -t user_groups <(groups "$USER")
+        if in_filter "$dir_gname" "${user_groups[@]}"; then
+            false
+        fi
+    elif ((privs & 0200)) && [[ "$USER" == "$dir_uname" ]]; then
+        false
+    fi
+}
