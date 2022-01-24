@@ -178,7 +178,7 @@ tun() {
         DEF_PORT=8080
         TUN_HOST=$1
         TUN_PORT=$2
-        if [[ $(pps ssh | grep -wc "$TUN_HOST") -gt 0 ]]; then
+        if [[ $(pps ssh | grep -wcE -- "-D.*$TUN_HOST") -gt 0 ]]; then
             CURR_PORT=$(pps ssh | grep -w "$TUN_HOST" | grep -owP -- "-D \d+" 2>/dev/null | cut -f2 -d' ')
             if [[ -n $CURR_PORT ]]; then
                 err "Tunnel to $TUN_HOST already exists on port $CURR_PORT"
@@ -422,4 +422,12 @@ need_sudo() {
     elif ((privs & 0200)) && [[ "$USER" == "$dir_uname" ]]; then
         false
     fi
+}
+
+resolve_url() {
+    set -x
+    local url=$1
+    local method=${2:-HEAD}
+    curl -Ls -o /dev/null -X "$method" -w "%{url_effective}\n" "$url"
+    set +x
 }
