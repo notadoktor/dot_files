@@ -22,11 +22,14 @@ shopt -s globstar
 load_extras "${supp_files[0]}"
 
 # set up conda, if present
-if [[ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]]; then
-    # shellcheck source=/dev/null
-    source "$HOME/miniconda3/etc/profile.d/conda.sh"
-    conda activate "${DEFAULT_CONDA_ENV:-base}"
-fi
+for CONDA_DIR in $HOME/{,.}miniconda3; do
+    if [[ -d "$CONDA_DIR" ]]; then
+        # shellcheck source=/dev/null
+        source "$CONDA_DIR/etc/profile.d/conda.sh"
+        conda activate "${DEFAULT_CONDA_ENV:-base}"
+    fi
+done
+unset CONDA_DIR
 
 # load the rest
 for supp_type in "${supp_files[@]:1}"; do
