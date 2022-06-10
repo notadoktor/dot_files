@@ -229,6 +229,9 @@ ps_state() {
             D)
                 base_state="uninterruptible sleep"
                 ;;
+            I)
+                base_state="Idle kernel thread"
+                ;;
             R)
                 base_state="running"
                 ;;
@@ -238,11 +241,20 @@ ps_state() {
             T)
                 base_state="stopped"
                 ;;
+            t)
+                base_state="tracing stop"
+                ;;
+            W)
+                base_state="paging"
+                ;;
+            X)
+                base_state="dead"
+                ;;
             Z)
                 base_state="zombie"
                 ;;
             *)
-                base_state="invalid code: ${1:0:1}"
+                base_state="invalid/unknown state code: ${1:0:1}, "
                 ;;
         esac
         if [[ -n ${1:1:1} ]]; then
