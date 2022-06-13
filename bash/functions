@@ -1,12 +1,12 @@
 #!/bin/bash
 
 log() {
-    echo "$(date +'%Y-%m-%d %H:%M:%S') - $*"
+    echo "$(date -Iseconds) - $*"
 }
 export -f log
 
 err() {
-    echo -e "\e[31mERROR\e[0m: ${FUNCNAME[1]}: $*"
+    log "\e[31mERROR\e[0m: ${FUNCNAME[1]}: $*"
     return 1
 }
 
@@ -31,8 +31,9 @@ resolve_path() {
         err "no path specified"
         return 1
     fi
-    SOURCE="$*"
+    local SOURCE FPATH DIR SDIR SFILE
 
+    SOURCE="$*"
     if which python3 >/dev/null; then
         # pathlib is best
         FPATH=$(python3 -c "import pathlib;p=pathlib.Path('$SOURCE');print(p.resolve())")
@@ -70,13 +71,11 @@ resolve_path() {
 }
 
 cmkdir() {
-    [ -d "$1" ] || mkdir -p "$1" || (
+    [[ -d "$1" ]] || mkdir -p "$1" || (
         err "mkdir failed: $1"
-        return 1
     )
     cd "$1" || (
         err "cd failed: $1"
-        return 1
     )
 }
 export -f cmkdir
@@ -87,20 +86,12 @@ cmktemp() {
 
 # run basic check on perl/python scripts before uploading
 cscp() {
-    if [[ -z $1 ]]; then
-        err "No file specified"
-        return 1
-    else
-        FNAME=$1
-        FEXT=${FNAME:(-3)}
+    if (($# != 2)); then
+        err "cscp requires 2 arguments: source and destination"
     fi
-
-    if [[ -z $2 ]]; then
-        err "No destination specified"
-        return 1
-    else
-        DEST=$2
-    fi
+    local FNAME=$1
+    local FEXT=${FNAME:(-3)}
+    local DEST=$2
 
     if [[ $FEXT == ".py" ]]; then
         python "$FNAME" -h >/dev/null && scp "$FNAME" "$DEST"
@@ -112,7 +103,7 @@ cscp() {
 }
 
 g() {
-    if git rev-parse 2>/dev/null; then
+    if git rev-parse &>/dev/null; then
         git status -sb
     else
         err "not in a git repo"
@@ -120,6 +111,7 @@ g() {
 }
 
 moo() {
+    local FTYPE ESTR TSTR E T
     for req in cowsay fortune; do
         if ! which $req >/dev/null 2>&1; then
             err "No $req, cannot moo"
@@ -144,15 +136,15 @@ mootrek() {
 }
 
 pcnt() {
-    local CNT=0
-    CNT=$(pgrep -P $$ | wc -l)
+    local PID=${1:-$$}
+    local CNT
+    CNT=$(pgrep -P "${PID}" | wc -l)
     echo $((CNT - 1))
 }
 
 port_used() {
     if [[ -z $* ]]; then
         err "no port specified"
-        return 1
     fi
     netstat -pnlt 2>/dev/null | grep -c ":$1\>"
 }
@@ -168,39 +160,40 @@ pps() {
 }
 
 tun() {
-    if [[ $# -eq 0 || $# -gt 2 ]]; then
+    if (($# == 0 || $# > 2)); then
         echo "You must specify where to tunnel"
         echo
         echo "tun < hostname > [ portnum ]"
         echo
         return 1
+    fi
+
+    local CURR_PORT PORT_IN_USE ERR_CODE
+    local DEF_PORT=8080
+    local TUN_HOST=$1
+    local TUN_PORT=$2
+    if (($(pps ssh | grep -wcE -- "-D.*$TUN_HOST") > 0)); then
+        CURR_PORT=$(pps ssh | grep -w "$TUN_HOST" | grep -owP -- "-D \d+" 2>/dev/null | cut -f2 -d' ')
+        if [[ -n $CURR_PORT ]]; then
+            err "Tunnel to $TUN_HOST already exists on port $CURR_PORT"
+        fi
+    elif [[ -n $TUN_PORT ]] && [[ $(port_used "$TUN_PORT") -gt 0 ]]; then
+        CURR_TUN=$(pps ssh | grep -w -- "-D $TUN_PORT" | perl -lane 'print pop @F')
+        err "Can't create tunnel to $TUN_HOST, tunnel to $CURR_TUN already running on $TUN_PORT"
     else
-        DEF_PORT=8080
-        TUN_HOST=$1
-        TUN_PORT=$2
-        if [[ $(pps ssh | grep -wcE -- "-D.*$TUN_HOST") -gt 0 ]]; then
-            CURR_PORT=$(pps ssh | grep -w "$TUN_HOST" | grep -owP -- "-D \d+" 2>/dev/null | cut -f2 -d' ')
-            if [[ -n $CURR_PORT ]]; then
-                err "Tunnel to $TUN_HOST already exists on port $CURR_PORT"
-            fi
-        elif [[ -n $TUN_PORT ]] && [[ $(port_used "$TUN_PORT") -gt 0 ]]; then
-            CURR_TUN=$(pps ssh | grep -w -- "-D $TUN_PORT" | perl -lane 'print pop @F')
-            err "Can't create tunnel to $TUN_HOST, tunnel to $CURR_TUN already running on $TUN_PORT"
+        TUN_PORT=${TUN_PORT:-$DEF_PORT}
+        PORT_IN_USE=$(port_used "$TUN_PORT")
+        while [[ "$PORT_IN_USE" -ne 0 ]]; do
+            TUN_PORT=$((TUN_PORT + 1))
+            PORT_IN_USE=$(port_used $TUN_PORT)
+        done
+        ssh -D $TUN_PORT -fCqN "$TUN_HOST"
+        ERR_CODE=$?
+        if [[ $ERR_CODE -ne 0 ]]; then
+            err "Error setting up tunnel to $TUN_HOST: $ERR_CODE"
         else
-            TUN_PORT=${TUN_PORT:-$DEF_PORT}
-            PORT_IN_USE=$(port_used "$TUN_PORT")
-            while [[ "$PORT_IN_USE" -ne 0 ]]; do
-                TUN_PORT=$((TUN_PORT + 1))
-                PORT_IN_USE=$(port_used $TUN_PORT)
-            done
-            ssh -D $TUN_PORT -fCqN "$TUN_HOST"
-            ERR_CODE=$?
-            if [[ $ERR_CODE -ne 0 ]]; then
-                err "Error setting up tunnel to $TUN_HOST: $ERR_CODE"
-            else
-                # echo -e "\$?: $?\n\$!: $!"
-                echo "Tunnel to $TUN_HOST created on port $TUN_PORT"
-            fi
+            # echo -e "\$?: $?\n\$!: $!"
+            echo "Tunnel to $TUN_HOST created on port $TUN_PORT"
         fi
     fi
 }
@@ -221,75 +214,68 @@ docker-ip() {
 
 # I can never remember ps state codes
 ps_state() {
-    if [[ -z $1 ]]; then
+    if [[ -z $* ]]; then
         err "no state code specified"
-    else
-        local base_state state_modifier desc
-        case ${1:0:1} in
-            D)
-                base_state="uninterruptible sleep"
-                ;;
-            I)
-                base_state="Idle kernel thread"
-                ;;
-            R)
-                base_state="running"
-                ;;
-            S)
-                base_state="interruptible sleep"
-                ;;
-            T)
-                base_state="stopped"
-                ;;
-            t)
-                base_state="tracing stop"
-                ;;
-            W)
-                base_state="paging"
-                ;;
-            X)
-                base_state="dead"
-                ;;
-            Z)
-                base_state="zombie"
-                ;;
-            *)
-                base_state="invalid/unknown state code: ${1:0:1}, "
-                ;;
-        esac
-        if [[ -n ${1:1:1} ]]; then
-            case ${1:1:1} in
-                "<")
-                    state_modifier="high priority"
-                    ;;
-                N)
-                    state_modifier="low priority"
-                    ;;
-                L)
-                    state_modifier="pages locked in memory"
-                    ;;
-                s)
-                    state_modifier="session leader"
-                    ;;
-                l)
-                    state_modifier="multi-threaded"
-                    ;;
-                +)
-                    state_modifier="foreground"
-                    ;;
-                *)
-                    state_modifier="invalid modifier: ${1:1:1}"
-                    ;;
-            esac
-        fi
-
-        if [[ -z $state_modifier ]]; then
-            desc="$base_state"
-        else
-            desc="$base_state ($state_modifier)"
-        fi
-        echo "state $1: $desc"
     fi
+    local state_code=$1
+
+    local -a states invalid
+    local desc
+    case ${state_code:0:1} in
+        D)
+            states+=("uninterruptible sleep")
+            ;;
+        I)
+            states+=("Idle kernel thread")
+            ;;
+        R)
+            states+=("running")
+            ;;
+        S)
+            states+=("interruptible sleep")
+            ;;
+        T)
+            states+=("stopped")
+            ;;
+        t)
+            states+=("tracing stop")
+            ;;
+        W)
+            states+=("paging")
+            ;;
+        X)
+            states+=("dead")
+            ;;
+        Z)
+            states+=("zombie")
+            ;;
+        "<")
+            states+=("high priority")
+            ;;
+        N)
+            states+=("low priority")
+            ;;
+        L)
+            states+=("pages locked in memory")
+            ;;
+        s)
+            states+=("session leader")
+            ;;
+        l)
+            states+=("multi-threaded")
+            ;;
+        +)
+            states+=("foreground")
+            ;;
+        *)
+            invalid+=("${state_code:0:1}")
+            ;;
+    esac
+
+    if [[ -n ${states[*]} ]]; then
+        desc="${states[*]}"
+    fi
+    echo "state $1: $desc"
 }
 
 # snap clutters up df listings SO MUCH
@@ -330,7 +316,7 @@ dawsdo() {
 
 # use default UI app to open a given file/location
 o() {
-    if [ $# -eq 0 ]; then
+    if [[ $# -eq 0 ]]; then
         xdg-open . >/dev/null 2>&1
     else
         xdg-open "$@" >/dev/null 2>&1
@@ -361,7 +347,7 @@ isup() {
 }
 
 ssh_fingerprint() {
-    pubkey=${1:-${HOME}/.ssh/id_rsa.pub}
+    local pubkey=${1:-${HOME}/.ssh/id_rsa.pub}
     if [[ -f $pubkey ]]; then
         ssh-keygen -l -E md5 -f "$pubkey"
     else
@@ -371,7 +357,7 @@ ssh_fingerprint() {
 
 # zero-based string index of first substring
 index() {
-    if [[ $# -ne 2 ]]; then
+    if (($# != 2)); then
         err "receieved $# args but expected 2"
         echo "usage: ${FUNCNAME[0]} some_str sub_str"
         return 1
@@ -379,7 +365,7 @@ index() {
     local target_str=$1
     local substr=$2
     # remove from leftmost substr to end of string
-    local str_diff=${target_str%%$substr*}
+    local str_diff=${target_str%%"$substr"*}
 
     if [[ "$str_diff" == "$target_str" ]]; then
         echo -1
@@ -392,7 +378,7 @@ export -f index
 
 # zero-based string index of last substring
 rindex() {
-    if [[ $# -ne 2 ]]; then
+    if (($# != 2)); then
         err "receieved $# args but expected 2"
         echo "usage: ${FUNCNAME[0]} some_str sub_str"
         return 1
@@ -400,7 +386,7 @@ rindex() {
     local target_str=$1
     local substr=$2
     # remove rightmost substr
-    local str_diff=${target_str%$substr*}
+    local str_diff=${target_str%"$substr"*}
 
     if [[ "$str_diff" == "$target_str" ]]; then
         echo -1
@@ -437,9 +423,7 @@ need_sudo() {
 }
 
 resolve_url() {
-    set -x
     local url=$1
     local method=${2:-HEAD}
     curl -Ls -o /dev/null -X "$method" -w "%{url_effective}\n" "$url"
-    set +x
 }
