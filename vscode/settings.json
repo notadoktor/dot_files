@@ -1,0 +1,86 @@
+{
+  "[dockerfile]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+  },
+  "[dotenv]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[go]": {
+    "editor.defaultFormatter": "golang.go"
+  },
+  "[plaintext]": {
+    "editor.quickSuggestions": {
+      "comments": false,
+      "other": false,
+      "strings": false
+    }
+  },
+  "[properties]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[python]": {
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    },
+    "editor.defaultFormatter": null,
+    "editor.formatOnSave": true
+  },
+  "[shellscript]": {
+    "editor.defaultFormatter": null
+  },
+  "[tcl]": {
+    "editor.defaultFormatter": "bitwisecook.tcl"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.fontFamily": "'InconsolataGo Nerd Font', 'mononoki Nerd Font', monospace",
+  "editor.fontSize": 12,
+  "editor.formatOnSave": true,
+  "editor.inlineSuggest.enabled": true,
+  "editor.suggestSelection": "first",
+  "explorer.confirmDragAndDrop": false,
+  "extensions.ignoreRecommendations": true,
+  "files.associations": {
+    "*.toml": "toml"
+  },
+  "git.autofetch": true,
+  "gitlens.defaultDateFormat": null,
+  "gitlens.defaultTimeFormat": "HH:MM",
+  "gitlens.statusBar.enabled": false,
+  "go.formatTool": "goimports",
+  "go.toolsManagement.autoUpdate": true,
+  "go.useLanguageServer": true,
+  "latex-workshop.view.pdf.viewer": "tab",
+  "notebook.cellToolbarLocation": {
+    "default": "right",
+    "jupyter-notebook": "left"
+  },
+  "prettier.printWidth": 100,
+  "python.analysis.typeCheckingMode": "basic",
+  "python.formatting.blackArgs": ["-l 100"],
+  "python.formatting.provider": "black",
+  "python.languageServer": "Pylance",
+  "redhat.telemetry.enabled": false,
+  "shellcheck.customArgs": ["-x"],
+  "shellcheck.disableVersionCheck": true,
+  "shellformat.effectLanguages": [
+    "shellscript",
+    "dockerfile",
+    "dotenv",
+    "hosts",
+    "jvmoptions",
+    "gitignore",
+    "properties",
+    "spring-boot-properties",
+    "azcli"
+  ],
+  "shellformat.flag": "-ci -bn -i 4",
+  "terminal.integrated.sendKeybindingsToShell": true,
+  "terminal.integrated.tabs.enabled": true,
+  "vsicons.dontShowNewVersionMessage": true,
+  "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+  "workbench.editor.untitled.hint": "hidden",
+  "workbench.editorAssociations": {
+    "*.ipynb": "jupyter-notebook"
+  },
+  "workbench.iconTheme": "vscode-icons"
+}
