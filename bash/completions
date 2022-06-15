@@ -23,7 +23,7 @@ comp[doctl]="doctl completion bash"
 comp[pip]="pip completion --bash"
 comp[aws]="echo complete -C aws_completer aws"
 comp[rustup]="rustup completions bash"
-comp[pipenv]="pipenv --completion"
+comp[pipenv]="_PIPENV_COMPLETE=bash_source pipenv"
 
 # pip and doctl
 for comp_name in ${!comp[*]}; do
@@ -32,7 +32,9 @@ for comp_name in ${!comp[*]}; do
     else
         cmd_check=(which "$comp_name")
     fi
-    test "${cmd_check[@]}" >&/dev/null 2>&1 || continue
+    if ! "${cmd_check[@]}" &>/dev/null; then
+        continue
+    fi
 
     comp_file="$HERE/completions_${comp_name}"
     if [[ ! -e "$comp_file" ]]; then

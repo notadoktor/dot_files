@@ -17,7 +17,7 @@ alias dc=cd # no, I'm never actually going to use dc intentionally
 alias rmdocker='docker ps -aq | xargs docker rm -f'
 
 # use plocate if available
-if [[ -n $(command -v plocate) ]]; then
+if command -v plocate &>/dev/null; then
     alias locate=plocate
 fi
 

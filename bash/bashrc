@@ -8,7 +8,7 @@ load_extras() {
         echo "cannot source nothing, something went wrong in bashrc"
     else
         for supp_file in "$supp_dir/$1"*; do
-            # shellcheck source=/dev/null
+            # shellcheck disable=SC1090
             [[ -f $supp_file ]] && source "$supp_file"
         done
     fi
@@ -24,7 +24,7 @@ load_extras "${supp_files[0]}"
 # set up conda, if present
 for CONDA_DIR in $HOME/{,.}miniconda3; do
     if [[ -d "$CONDA_DIR" ]]; then
-        # shellcheck source=/dev/null
+        # shellcheck disable=SC1091
         source "$CONDA_DIR/etc/profile.d/conda.sh"
         conda activate "${DEFAULT_CONDA_ENV:-base}"
     fi
@@ -36,5 +36,5 @@ for supp_type in "${supp_files[@]:1}"; do
     load_extras "$supp_type"
 done
 
-# shellcheck source=/dev/null
+# shellcheck disable=SC1091
 [[ -f $HOME/liquidprompt/liquidprompt && $- = *i* ]] && source "$HOME/liquidprompt/liquidprompt"
