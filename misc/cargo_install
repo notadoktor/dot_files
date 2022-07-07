@@ -1,0 +1,19 @@
+#!/bin/bash -e
+
+CARGO_PKGS=(
+	du-dust
+	tokei
+	bat
+	procs
+	fd-find
+	ripgrep
+	csview
+)
+declare -A CARGO_FEATS=([websocat]=ssl)
+
+cargo install "${CARGO_PKGS[@]}"
+
+for pkg in "${!CARGO_FEATS[@]}"; do
+	cargo install --features=${CARGO_FEATS[$pkg]} $pkg
+done
+
