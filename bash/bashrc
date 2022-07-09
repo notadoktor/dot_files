@@ -14,22 +14,47 @@ load_extras() {
     fi
 }
 
-# append to the history file, don't overwrite it
-shopt -s histappend
+shopt -s cdspell
+shopt -s checkwinsize
+shopt -s dirspell
+shopt -s expand_aliases
 shopt -s globstar
+shopt -s histappend
+shopt -s no_empty_cmd_completion
+shopt -s nullglob
 
 # load exports first
 load_extras "${supp_files[0]}"
 
 # set up conda, if present
-for CONDA_DIR in $HOME/{,.}miniconda3; do
+CONDA_DIRS=(
+    "$HOME/miniconda3"
+    "$HOME/.miniconda3"
+    "$HOME/mambaforge"
+    "$HOME/.mambaforge"
+    "$HOME/condaforge"
+    "$HOME/.condaforge"
+)
+for CONDA_DIR in "${CONDA_DIRS[@]}"; do
     if [[ -d "$CONDA_DIR" ]]; then
-        # shellcheck disable=SC1091
-        source "$CONDA_DIR/etc/profile.d/conda.sh"
+        if __conda_setup="$("$CONDA_DIR/bin/conda" shell.bash hook 2>/dev/null)"; then
+            eval "$__conda_setup"
+        else
+            for conda_flavor in mamba conda; do
+                conda_profile="$CONDA_DIR/etc/profile.d/${conda_flavor}.sh"
+                if [[ -f "$conda_profile" ]]; then
+                    # shellcheck disable=SC1090
+                    source "$conda_profile"
+                    unset "$conda_profile"
+                    break
+                fi
+            done
+            unset conda_flavor
+        fi
         conda activate "${DEFAULT_CONDA_ENV:-base}"
     fi
 done
-unset CONDA_DIR
+unset CONDA_DIR CONDA_DIRS
 
 # load the rest
 for supp_type in "${supp_files[@]:1}"; do
