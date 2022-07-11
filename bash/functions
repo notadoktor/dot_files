@@ -1,7 +1,7 @@
 #!/bin/bash
 
 log() {
-    echo "$(date -Iseconds) - $*"
+    echo -e "$(date -Iseconds) - $*"
 }
 export -f log
 

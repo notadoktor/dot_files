@@ -55,7 +55,7 @@ ft = "!f() { git describe --always --contains $1; }; f"
 
 ### housekeeping
 # Remove branches that have already been merged with master a.k.a. ‘delete merged’
-dm = "!git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d; git remote -v update -p"
+dm = "!git branch --merged | grep -v '\\*' | grep -vw 'dev\\|master\\|main' | xargs -n 1 git branch -d; git remote -v update -p"
 
 ### misc
 remotes = remote -v
