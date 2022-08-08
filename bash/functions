@@ -110,15 +110,20 @@ g() {
     fi
 }
 
+# shellcheck disable=SC2120
 moo() {
     local FTYPE ESTR TSTR E T
     for req in cowsay fortune; do
-        if ! which $req >/dev/null 2>&1; then
+        if ! which $req &>/dev/null; then
             err "No $req, cannot moo"
             return 1
         fi
     done
-    FTYPE=${FTYPE:-bofh-excuses}
+    if [[ -n $1 ]]; then
+        FTYPE=$1
+    else
+        FTYPE=${FTYPE:bofh-excuses}
+    fi
     if ! fortune -f 2>&1 | grep -q "$FTYPE"; then
         FTYPE=
     fi
@@ -127,7 +132,7 @@ moo() {
     TSTR='    UV^Ü'
     E=${ESTR:$(($(tr -cd 0-9 </dev/urandom | head -c 2) % ${#ESTR})):1}
     T=${TSTR:$(($(tr -cd 0-9 </dev/urandom | head -c 2) % ${#TSTR})):1}
-    fortune "$FTYPE" | /usr/games/cowsay -n -e "$E$E" -T "$T "
+    fortune "$FTYPE" | cowsay -n -e "$E$E" -T "$T "
     echo
 }
 
