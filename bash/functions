@@ -110,6 +110,12 @@ g() {
     fi
 }
 
+# shellcheck disable=2120
+randint() {
+    local digits=${1:-2}
+    tr -cd 0-9 </dev/urandom | head -c "${digits}" | perl -lne 'print(int($_))'
+}
+
 # shellcheck disable=SC2120
 moo() {
     local FTYPE ESTR TSTR E T
@@ -130,8 +136,8 @@ moo() {
     # LANG must be exported as something with utf8 for some special characters to print
     ESTR='o=X$@*-O.¿¡'
     TSTR='    UV^Ü'
-    E=${ESTR:$(($(tr -cd 0-9 </dev/urandom | head -c 2) % ${#ESTR})):1}
-    T=${TSTR:$(($(tr -cd 0-9 </dev/urandom | head -c 2) % ${#TSTR})):1}
+    E=${ESTR:$(($(randint) % ${#ESTR})):1}
+    T=${TSTR:$(($(randint) % ${#TSTR})):1}
     fortune "$FTYPE" | cowsay -n -e "$E$E" -T "$T "
     echo
 }
