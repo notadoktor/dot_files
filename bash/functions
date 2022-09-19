@@ -483,3 +483,13 @@ ex() {
         echo "'$1' is not a valid file"
     fi
 }
+
+lscnt() {
+    local args
+    if (($# == 0)); then
+        args=(.)
+    else
+        args=("$@")
+    fi
+    find "${args[@]}" -maxdepth 1 -print | wc -l
+}
