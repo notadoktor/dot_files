@@ -63,3 +63,6 @@ done
 
 # shellcheck disable=SC1091
 [[ -f $HOME/liquidprompt/liquidprompt && $- = *i* ]] && source "$HOME/liquidprompt/liquidprompt"
+
+# remap caps lock to compose
+setxkbmap -option compose:caps
