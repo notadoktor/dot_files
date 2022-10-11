@@ -493,3 +493,10 @@ lscnt() {
     fi
     find "${args[@]}" -maxdepth 1 -print | wc -l
 }
+
+clean_str() {
+    local str=$1
+    local clean_str=${str// /_}
+    clean_str=${clean_str//[^[:alnum:]_]}
+    echo "$clean_str"
+}
