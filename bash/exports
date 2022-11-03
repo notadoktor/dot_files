@@ -60,6 +60,11 @@ if which flatpak &>/dev/null; then
     fi
 fi
 
+# bat
+if which bat &>/dev/null; then
+    export BAT_PAGER="less -Xr"
+fi
+
 # nix
 # shellcheck source=/dev/null
 [[ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ]] && . "$HOME/.nix-profile/etc/profile.d/nix.sh"
