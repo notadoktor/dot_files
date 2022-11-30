@@ -500,3 +500,16 @@ clean_str() {
     clean_str=${clean_str//[^[:alnum:]_]}
     echo "$clean_str"
 }
+
+mamba-update() {
+    declare -a env_names
+    if [[ -n $* ]]; then
+        env_names+=("$@")
+    else
+        mapfile -t env_names < <(mamba env list --json | jq -rc '.envs[]' | grep -oP '(?<=envs/).*$')
+        env_names=(base "${env_names[@]}")
+    fi
+    for env in "${env_names[@]}"; do
+        mamba update -n "$env" --all -y || return 1
+    done
+}
