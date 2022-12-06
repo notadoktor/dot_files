@@ -24,6 +24,7 @@ in_filter() {
             ;;
     esac
 }
+export -f in_filter
 
 # works on MacOS and other *nix, more complicated because macs are afraid of readlink/realpath
 resolve_path() {
@@ -128,7 +129,7 @@ moo() {
     if [[ -n $1 ]]; then
         FTYPE=$1
     else
-        FTYPE=${FTYPE:bofh-excuses}
+        FTYPE=${FTYPE:-bofh-excuses}
     fi
     if ! fortune -f 2>&1 | grep -q "$FTYPE"; then
         FTYPE=
@@ -356,6 +357,7 @@ isup() {
         notify-send --urgency=critical "$uri is down"
     fi
 }
+export -f isup
 
 ssh_fingerprint() {
     local pubkey=${1:-${HOME}/.ssh/id_rsa.pub}
@@ -432,12 +434,14 @@ need_sudo() {
         false
     fi
 }
+export -f need_sudo
 
 resolve_url() {
     local url=$1
     local method=${2:-HEAD}
     curl -Ls -o /dev/null -X "$method" -w "%{url_effective}\n" "$url"
 }
+export -f resolve_url
 
 ex() {
     if [[ -f $1 ]]; then
@@ -493,11 +497,12 @@ lscnt() {
     fi
     find "${args[@]}" -maxdepth 1 -print | wc -l
 }
+export -f lscnt
 
 clean_str() {
     local str=$1
     local clean_str=${str// /_}
-    clean_str=${clean_str//[^[:alnum:]_]}
+    clean_str=${clean_str//[^[:alnum:]_]/}
     echo "$clean_str"
 }
 

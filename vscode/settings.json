@@ -1,6 +1,6 @@
 {
   "[dockerfile]": {
-    "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+    "editor.defaultFormatter": "foxundermoon.shell-format"
   },
   "[dotenv]": {
     "editor.defaultFormatter": "foxundermoon.shell-format"
@@ -82,5 +82,6 @@
   "workbench.editorAssociations": {
     "*.ipynb": "jupyter-notebook"
   },
-  "workbench.iconTheme": "vscode-icons"
+  "workbench.iconTheme": "vscode-icons",
+  "window.zoomLevel": 1
 }

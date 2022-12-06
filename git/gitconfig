@@ -128,3 +128,5 @@ path = ~/.gitconfig.inc
 
 [rerere]
 enabled = true
+[core]
+	excludesFile = ~/.gitignore
