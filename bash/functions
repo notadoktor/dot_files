@@ -511,10 +511,12 @@ mamba-update() {
     if [[ -n $* ]]; then
         env_names+=("$@")
     else
-        mapfile -t env_names < <(mamba env list --json | jq -rc '.envs[]' | grep -oP '(?<=envs/).*$')
-        env_names=(base "${env_names[@]}")
+        mapfile -t env_names < <(mamba env list --json | jq -rc '.envs[]' | grep -oP '(?<=envs/)python3.*$')
+        env_names=(base "$HOSTNAME" "${env_names[@]}")
     fi
     for env in "${env_names[@]}"; do
         mamba update -n "$env" --all -y || return 1
     done
+    echo "Finished updating ${#env_names[@]} environments:"
+    printf '  - %s\n' "${env_names[@]}"
 }
