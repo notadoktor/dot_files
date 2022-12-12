@@ -24,10 +24,13 @@ comp[doctl]="doctl completion bash"
 comp[pip]="pip completion --bash"
 comp[pipenv]="_PIPENV_COMPLETE=bash_source pipenv"
 
-_rustup_comp="rustup completions bash"
-comp[rustup]="${_rustup_comp} rustup"
-comp[cargo]="${_rustup_comp} cargo"
-unset _rustup_comp
+# manjaro install rust directly, so no rustup even if cargo exists
+if command -v rustup &>/dev/null; then
+    _rustup_comp="rustup completions bash"
+    comp[rustup]="${_rustup_comp} rustup"
+    comp[cargo]="${_rustup_comp} cargo"
+    unset _rustup_comp
+fi
 
 # pip and doctl
 for comp_name in ${!comp[*]}; do
