@@ -507,7 +507,8 @@ clean_str() {
 }
 
 mamba-update() {
-    declare -a env_names
+    declare -a env_names updated_envs
+    local install_log
     if [[ -n $* ]]; then
         env_names+=("$@")
     else
@@ -515,8 +516,21 @@ mamba-update() {
         env_names=(base "$HOSTNAME" "${env_names[@]}")
     fi
     for env in "${env_names[@]}"; do
-        mamba update -n "$env" --all -y || return 1
+        if mamba update -n "$env" --all -d |& grep -q 'All requested packages already installed'; then
+            log "No updates for $env"
+            continue
+        fi
+        install_log=$(mktemp -t "mamba-update-$env.XXXXXX")
+        log "Updating mamba env '$env'"
+        mamba update -n "$env" --all -y &>"$install_log" || {
+            echo "mamba update failed for $env"
+            cat "$install_log"
+            return 1
+        }
+        updated_envs+=("$env")
     done
-    echo "Finished updating ${#env_names[@]} environments:"
-    printf '  - %s\n' "${env_names[@]}"
+
+    if ((${#updated_envs[@]} > 0)); then
+        log "Updated mamba envs: ${updated_envs[*]}"
+    fi
 }
