@@ -507,6 +507,14 @@ clean_str() {
 }
 
 mamba-update() {
+    if ! command -v mamba &>/dev/null; then
+        log "mamba not found, nothing to do"
+        return 2
+    elif ! command -v jq &>/dev/null; then
+        log "jq not found, can't parse output of mamba env list"
+        return 1
+    fi
+
     declare -a env_names updated_envs
     local install_log
     if [[ -n $* ]]; then
@@ -515,22 +523,25 @@ mamba-update() {
         mapfile -t env_names < <(mamba env list --json | jq -rc '.envs[]' | grep -oP '(?<=envs/)python3.*$')
         env_names=(base "$HOSTNAME" "${env_names[@]}")
     fi
+    log "Checking for updates in ${#env_names[@]} enviornments"
+
     for env in "${env_names[@]}"; do
+        [[ -n $VERBOSE ]] && log "$env - Checking for updates"
         if mamba update -n "$env" --all -d |& grep -q 'All requested packages already installed'; then
-            log "No updates for $env"
             continue
         fi
         install_log=$(mktemp -t "mamba-update-$env.XXXXXX")
-        log "Updating mamba env '$env'"
+        log "$env - installing updates"
         mamba update -n "$env" --all -y &>"$install_log" || {
-            echo "mamba update failed for $env"
-            cat "$install_log"
-            return 1
+            err "$env - mamba update failed, see $install_log"
         }
         updated_envs+=("$env")
     done
 
     if ((${#updated_envs[@]} > 0)); then
-        log "Updated mamba envs: ${updated_envs[*]}"
+        log "Updated mamba envs:"
+        printf '%s\n' "${updated_envs[@]}"
+    else
+        log "No updates found"
     fi
 }
