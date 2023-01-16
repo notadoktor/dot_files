@@ -535,6 +535,8 @@ mamba-update() {
         mamba update -n "$env" --all -y &>"$install_log" || {
             err "$env - mamba update failed, see $install_log"
         }
+        perl -lne 'if (!$do_print){ /^\s+Package/ && do {$do_print++; print}} else {print; last if /^\s+Total download/;}' "$install_log"
+        log "$env - update complete"
         updated_envs+=("$env")
     done
 
