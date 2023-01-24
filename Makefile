@@ -44,6 +44,13 @@ misc: ## set up all files in misc/
 	for fname in ${HERE}/misc/* ; do dot_fname=${HOME}/.$$(basename $$fname); if [[ -e $$dot_fname && ! -h $$dot_fname ]]; then ${MV} $$fname $$dot_fname.${MV_SUFFIX} ; fi; ${INSTALL} $$fname $$dot_fname ; done
 	@echo finished setting up misc dot files
 
+.PHONY: util
+UTIL_DIR = ${HOME}/.local/bin
+util: ## set up util scripts in $UTIL_DIR
+	$(if $(wildcard ${UTIL_DIR}), , mkdir -p ${UTIL_DIR})
+	@${INSTALL} ${HERE}/util/* ${UTIL_DIR}/
+	@echo finished setting up util scripts
+
 .PHONY: vscode vscode-snippets vscode-settings
 CODE_DIR ?= ${HOME}/.config/Code/User
 
