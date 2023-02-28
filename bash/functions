@@ -547,3 +547,23 @@ mamba-update() {
         log "No updates found"
     fi
 }
+
+# extract audio codec used in a video file
+# requires ffprobe
+get_audio_codec() {
+    local video_file=$1
+    ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$video_file"
+}
+
+# extract audio track from a video file
+# requires ffmpeg
+extract_audio() {
+    local video_file=$1 audio_file audio_codec
+    audio_codec=$(get_audio_codec "$video_file")
+    if [[ -z $audio_codec ]]; then
+        err "no audio track found in $video_file"
+        return 1
+    fi
+    audio_file=${video_file%.*}.$audio_codec
+    ffmpeg -i "$video_file" -vn -acodec copy "$audio_file"
+}

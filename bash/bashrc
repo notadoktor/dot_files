@@ -65,4 +65,6 @@ done
 [[ -f $HOME/liquidprompt/liquidprompt && $- = *i* ]] && source "$HOME/liquidprompt/liquidprompt"
 
 # remap caps lock to compose
-setxkbmap -option compose:caps
+if command -v setxkbmap &>/dev/null; then
+    setxkbmap -option compose:caps
+fi
