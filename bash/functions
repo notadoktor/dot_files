@@ -564,6 +564,7 @@ extract_audio() {
         err "no audio track found in $video_file"
         return 1
     fi
-    audio_file=${video_file%.*}.$audio_codec
-    ffmpeg -i "$video_file" -vn -acodec copy "$audio_file"
+    audio_file=$(clean_str "${video_file%.*}").$audio_codec
+    echo "extracting audio track to $audio_file"
+    ffmpeg -v error -i "$video_file" -vn -acodec copy "$audio_file"
 }
