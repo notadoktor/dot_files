@@ -1,5 +1,10 @@
 #!/bin/bash -e
 
+if ! command -v apt &>/dev/null; then
+	echo "apt not available, nothing to check"
+	exit
+fi
+
 mapfile -t avail_pkgs < <(apt list --upgradable 2>/dev/null | grep / | cut -f1 -d/)
 
 if [[ ${#avail_pkgs[@]} -eq 0 ]]; then
