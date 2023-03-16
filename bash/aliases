@@ -5,7 +5,6 @@ alias cd='>/dev/null cd' # make CDPATH shut up
 alias grep='grep --color=auto'
 alias ls='ls --color=auto'
 alias ll='ls -lF'
-alias l.='ls -laF'
 alias scp='scp -r'
 
 # common typos
@@ -24,3 +23,4 @@ fi
 # ffmpeg
 alias ffmpeg='ffmpeg -hide_banner'
 alias ffprobe='ffprobe -hide_banner'
+alias ffplay='ffplay -hide_banner -autoexit'
