@@ -111,7 +111,15 @@ g() {
     fi
 }
 
-# shellcheck disable=2120
+gstat() {
+    if git rev-parse &>/dev/null; then
+        git diff --stat
+    else
+        err "not in a git repo"
+    fi
+}
+
+# shellcheck disable=SC2120
 randint() {
     local digits=${1:-2}
     tr -cd 0-9 </dev/urandom | head -c "${digits}" | perl -lne 'print(int($_))'
