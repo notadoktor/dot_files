@@ -19,7 +19,7 @@ done
 export DEFAULT_CONDA_ENV=$(hostname -s)
 
 # python
-export PYTHONPATH=$HOME/lib/python
+# export PYTHONPATH=$HOME/lib/python
 export PIPENV_VENV_IN_PROJECT=1
 export PIPENV_SPINNER=arrow3
 

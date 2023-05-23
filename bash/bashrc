@@ -39,7 +39,6 @@ _init_conda() {
     local conda_flavor conda_profile
     for CONDA_DIR in "${CONDA_DIRS[@]}"; do
         if [[ -d "$CONDA_DIR" ]]; then
-            [[ -d "$CONDA_DIR/condabin" ]] && update_path "$CONDA_DIR/condabin"
             for conda_flavor in mamba conda; do
                 conda_profile="$CONDA_DIR/etc/profile.d/${conda_flavor}.sh"
                 if [[ -f "$conda_profile" ]]; then

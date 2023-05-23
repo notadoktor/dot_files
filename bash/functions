@@ -576,3 +576,25 @@ extract_audio() {
     echo "extracting audio track to $audio_file"
     ffmpeg -v error -i "$video_file" -vn -acodec copy "$audio_file"
 }
+
+# jupyter lab wrapper
+jlab() {
+    local jlab_log jupy_dir jlab_env cmd
+    jlab_env=${JUPYTER_ENV:-jupyter}
+    jupy_dir=${JUPY_DIR:-/data/jupyter}
+    export JUPYTER_CONFIG_DIR=$jupy_dir/etc
+    export JUPYTER_DATA_DIR=$jupy_dir/data
+    jlab_log=$jupy_dir/logs/jupyter-server.log
+
+    cmd=(conda run -n "$jlab_env" jupyter)
+    "${cmd[@]}" --help >/dev/null || return $?
+
+    if [[ -n "$*" ]]; then
+        "${cmd[@]}" "$@"
+    else
+        # use a subshell so background process doesn't clutter session
+        (
+            nohup "${cmd[@]}" lab &>>"$jlab_log" &
+        )
+    fi
+}
