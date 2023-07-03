@@ -9,6 +9,7 @@ err() {
     log "\e[31mERROR\e[0m: ${FUNCNAME[1]}: $*"
     return 1
 }
+export -f err
 
 # checks for existence of first param in list of everything afterwards
 # not whitespace friendly
@@ -161,6 +162,7 @@ pcnt() {
     CNT=$(pgrep -P "${PID}" | wc -l)
     echo $((CNT - 1))
 }
+export -f pcnt
 
 port_used() {
     if [[ -z $* ]]; then
@@ -178,6 +180,7 @@ pps() {
         err "No '$1' processes found"
     fi
 }
+export -f pps
 
 tun() {
     if (($# == 0 || $# > 2)); then
@@ -231,6 +234,7 @@ docker-ip() {
         docker inspect "$1" | jq -r '.[0].NetworkSettings.IPAddress'
     fi
 }
+export -f docker-ip
 
 # I can never remember ps state codes
 ps_state() {
@@ -513,6 +517,7 @@ clean_str() {
     clean_str=${clean_str//[^[:alnum:]_-]/}
     echo "$clean_str"
 }
+export -f clean_str
 
 mamba-update() {
     if ! command -v mamba &>/dev/null; then

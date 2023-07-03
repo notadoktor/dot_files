@@ -14,6 +14,11 @@ for user_bin in "$HOME/bin" "$HOME/.local/bin"; do
     [[ -d "$user_bin" ]] && update_path "$user_bin"
 done
 
+# HiDPI
+export GDK_SCALE=1.5
+export GDK_DPI_SCALE=0.75
+export QT_SCALE_FACTOR=1.5
+
 # conda
 # shellcheck disable=2155
 export DEFAULT_CONDA_ENV=$(hostname -s)
