@@ -533,7 +533,7 @@ mamba-update() {
     if [[ -n $* ]]; then
         env_names+=("$@")
     else
-        mapfile -t env_names < <(mamba env list --json | jq -rc '.envs[]' | grep -oP '(?<=envs/)python3.*$')
+        mapfile -t env_names < <(conda env list --json | jq -rc '.envs[]' | grep -oP '(?<=envs/)python3.*$')
         env_names=(base "$HOSTNAME" "${env_names[@]}")
     fi
     log "Checking for updates in ${#env_names[@]} environments"
