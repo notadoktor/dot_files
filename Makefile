@@ -40,8 +40,9 @@ git: ## set up gitconfig
 	@echo gitconfig has been set up. user specific settings can be placed in ${HOME}/.gitconfig.inc
 
 .PHONY: misc
+# matplotlibrc gets special handling because it goes in ~/.config instead of ~/
 misc: ## set up all files in misc/
-	for fname in ${HERE}/misc/* ; do dot_fname=${HOME}/.$$(basename $$fname); if [[ -e $$dot_fname && ! -h $$dot_fname ]]; then ${MV} $$fname $$dot_fname.${MV_SUFFIX} ; fi; ${INSTALL} $$fname $$dot_fname ; done
+	for fname in ${HERE}/misc/* ; do if [[ $$(basename $$fname) == matplotlibrc ]]; then dot_fname=${HOME}/.config/matplotlib/matplotlibrc; else dot_fname=${HOME}/.$$(basename $$fname); fi; if [[ -e $$dot_fname && ! -h $$dot_fname ]]; then ${MV} $$fname $$dot_fname.${MV_SUFFIX} ; fi; ${INSTALL} $$fname $$dot_fname ; done
 	@echo finished setting up misc dot files
 
 .PHONY: util

@@ -22,7 +22,7 @@
     "editor.codeActionsOnSave": {
       "source.organizeImports": true
     },
-    "editor.defaultFormatter": null,
+    "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true
   },
   "[shellscript]": {
@@ -56,11 +56,15 @@
   },
   "prettier.printWidth": 100,
   "python.analysis.typeCheckingMode": "basic",
-  "python.formatting.blackArgs": ["-l 100"],
-  "python.formatting.provider": "black",
+  "python.formatting.blackArgs": [
+    "-l 100"
+  ],
+  "python.formatting.provider": "none",
   "python.languageServer": "Pylance",
   "redhat.telemetry.enabled": false,
-  "shellcheck.customArgs": ["-x"],
+  "shellcheck.customArgs": [
+    "-x"
+  ],
   "shellcheck.disableVersionCheck": true,
   "shellformat.effectLanguages": [
     "shellscript",
@@ -83,5 +87,15 @@
     "*.ipynb": "jupyter-notebook"
   },
   "workbench.iconTheme": "vscode-icons",
+  "terminal.integrated.inheritEnv": false,
+  "github.copilot.enable": {
+    "*": true,
+    "yaml": false,
+    "plaintext": false,
+    "markdown": false
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
   "window.zoomLevel": 1
 }

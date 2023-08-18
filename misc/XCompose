@@ -4533,7 +4533,9 @@
 <Multi_key> <equal> <greater> 	: "⇒" U21D2 # RIGHTWARDS DOUBLE ARROW
 <Multi_key> <U2203> <U0338> 	: "∄"   U2204 # THERE DOES NOT EXIST
 <Multi_key> <braceleft> <braceright>	: "∅"   U2205 # EMPTY SET
+<Multi_key> <i> <n>             : "∈"   U2208 # ELEMENT OF
 <Multi_key> <U2208> <U0338> 	: "∉"   U2209 # NOT AN ELEMENT OF
+<Multi_key> <m> <i>             : "∋"   U220B # CONTAINS AS MEMBER
 <Multi_key> <U220B> <U0338> 	: "∌"   U220C # DOES NOT CONTAIN AS MEMBER
 <Multi_key> <U2223> <U0338> 	: "∤"   U2224 # DOES NOT DIVIDE
 <Multi_key> <U2225> <U0338> 	: "∦"   U2226 # NOT PARALLEL TO

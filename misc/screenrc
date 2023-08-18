@@ -81,3 +81,6 @@ vbell_msg             " *beep* "
 
 # enable utf8 by default
 defutf8 on
+
+logfile screenlog.%Y%m%d-%c:%s.%t.log
+deflog on
