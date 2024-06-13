@@ -14,6 +14,7 @@ alias dc=cd # no, I'm never actually going to use dc intentionally
 
 # other
 alias rmdocker='docker ps -aq | xargs docker rm -f'
+alias docker-compose='docker compose'
 
 # use plocate if available
 if command -v plocate &>/dev/null; then

@@ -236,6 +236,15 @@ docker-ip() {
 }
 export -f docker-ip
 
+dc-downup() {
+    local svc="$*"
+    if [[ -z $svc ]]; then
+        err "no service specified"
+    fi
+    docker compose down "$svc" && docker compose up -d "$svc"
+}
+export -f dc-downup
+
 # I can never remember ps state codes
 ps_state() {
     if [[ -z $* ]]; then
@@ -533,7 +542,7 @@ mamba-update() {
     if [[ -n $* ]]; then
         env_names+=("$@")
     else
-        mapfile -t env_names < <(conda env list --json | jq -rc '.envs[]' | grep -oP '(?<=envs/)python3.*$')
+        mapfile -t env_names < <(conda env list --json | jq -rc '.envs[]' | grep -oP '(?<=envs/)python3\d+$')
         env_names=(base "$HOSTNAME" "${env_names[@]}")
     fi
     log "Checking for updates in ${#env_names[@]} environments"
@@ -601,5 +610,42 @@ jlab() {
         (
             nohup "${cmd[@]}" lab &>>"$jlab_log" &
         )
+    fi
+}
+
+export DOCKER_REPO_PREFIX=jess
+dfirefox() {
+    del_stopped firefox
+
+    docker run -d \
+        --memory 2gb \
+        --net host \
+        --cpuset-cpus 0 \
+        -v /etc/localtime:/etc/localtime:ro \
+        -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -v "${HOME}/.firefox/cache:/root/.cache/mozilla" \
+        -v "${HOME}/.firefox/mozilla:/root/.mozilla" \
+        -v "${HOME}/Downloads:/root/Downloads" \
+        -v "${HOME}/Pictures:/root/Pictures" \
+        -v "${HOME}/Torrents:/root/Torrents" \
+        -e "DISPLAY=unix${DISPLAY}" \
+        -e GDK_SCALE \
+        -e GDK_DPI_SCALE \
+        --device /dev/snd \
+        --device /dev/dri \
+        --name firefox \
+        ${DOCKER_REPO_PREFIX}/firefox "$@"
+
+    # exit current shell
+    # exit 0
+}
+
+del_stopped() {
+    local name=$1
+    local state
+    state=$(docker inspect --format "{{.State.Running}}" "$name" 2>/dev/null)
+
+    if [[ "$state" == "false" ]]; then
+        docker rm "$name"
     fi
 }

@@ -16,7 +16,7 @@
     }
   },
   "[properties]": {
-    "editor.defaultFormatter": "foxundermoon.shell-format"
+    "editor.defaultFormatter": null
   },
   "[python]": {
     "editor.codeActionsOnSave": {
@@ -56,15 +56,11 @@
   },
   "prettier.printWidth": 100,
   "python.analysis.typeCheckingMode": "basic",
-  "python.formatting.blackArgs": [
-    "-l 100"
-  ],
+  "python.formatting.blackArgs": ["-l 100"],
   "python.formatting.provider": "none",
   "python.languageServer": "Pylance",
   "redhat.telemetry.enabled": false,
-  "shellcheck.customArgs": [
-    "-x"
-  ],
+  "shellcheck.customArgs": ["-x"],
   "shellcheck.disableVersionCheck": true,
   "shellformat.effectLanguages": [
     "shellscript",
@@ -86,7 +82,7 @@
   "workbench.editorAssociations": {
     "*.ipynb": "jupyter-notebook"
   },
-  "workbench.iconTheme": "vscode-icons",
+  "workbench.iconTheme": "material-icon-theme",
   "terminal.integrated.inheritEnv": false,
   "github.copilot.enable": {
     "*": true,
@@ -95,7 +91,11 @@
     "markdown": false
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "vscode.json-language-features"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "debug.javascript.autoAttachFilter": "onlyWithFlag",
+  "[flux]": {
+    "editor.defaultFormatter": "influxdata.flux"
   },
   "window.zoomLevel": 1
 }
