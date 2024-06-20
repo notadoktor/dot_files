@@ -30,6 +30,8 @@ _init_conda() {
     local -a CONDA_DIRS=(
         "$HOME/miniconda3"
         "$HOME/.miniconda3"
+        "$HOME/miniforge3"
+        "$HOME/.miniforge3"
         "$HOME/mambaforge"
         "$HOME/.mambaforge"
         "$HOME/condaforge"

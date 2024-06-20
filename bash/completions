@@ -1,4 +1,4 @@
-#!/bin/bash
+# shellcheck shell=bash
 
 HERE=$(dirname "$(resolve_path "${BASH_SOURCE[0]}")")
 

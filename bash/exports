@@ -1,18 +1,19 @@
-#!/bin/bash
+# shellcheck shell=bash
 
 # XDG defaults
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_DATA_DIRS=/usr/share/ubuntu:/usr/local/share:/usr/share:/var/lib/snapd/desktop
 
 # general
-export LANG="en_US.utf8"
-export LC_ALL="en_US.utf8"
+export LANG="en_US.UTF-8"
+export LC_ALL="en_US.UTF-8"
 export PAGER=less
 export MANPAGER="less -X"
 export EDITOR=vim
-for user_bin in "$HOME/bin" "$HOME/.local/bin"; do
-    [[ -d "$user_bin" ]] && update_path "$user_bin"
-done
+
+# extra dirs where binaries may live to add to the PATH
+USER_BINS=("$HOME/bin" "$HOME/.local/bin")
+APP_BINS=()
 
 # HiDPI
 export GDK_SCALE=1.5
@@ -32,12 +33,15 @@ export PIPENV_SPINNER=arrow3
 export GOPATH=$HOME/go
 export GOBIN=$GOPATH/bin
 export GO111MODULE=auto
-for go_bin in /usr/local/go/bin "$GOBIN"; do
-    [[ -d "$go_bin" ]] && update_path "$go_bin"
-done
+APP_BINS+=(/usr/local/go/bin "$GOBIN")
 
-# rust
-[ -d "$HOME/.cargo/bin" ] && update_path "$HOME/.cargo/bin"
+# rust/cargo
+APP_BINS+=("$HOME/.cargo/bin")
+
+# bat
+if command -v bat &>/dev/null; then
+    export BAT_PAGER="less -Xr"
+fi
 
 # bash
 export HISTSIZE=50000000
@@ -48,7 +52,7 @@ export HISTCONTROL=ignoredups
 export DOCKER_BUILDKIT=1
 
 # flatpak
-if which flatpak &>/dev/null; then
+if command -v flatpak &>/dev/null; then
     FLATPAK_XDG_DATA_DIRS="/var/lib/flatpak/exports/share:$XDG_DATA_HOME/flatpak/exports/share"
     # prevent duplication when running `exec bash` to refresh shell env
     if ! [[ "$XDG_DATA_DIRS" =~ :$FLATPAK_XDG_DATA_DIRS ]]; then
@@ -56,11 +60,15 @@ if which flatpak &>/dev/null; then
     fi
 fi
 
-# bat
-if which bat &>/dev/null; then
-    export BAT_PAGER="less -Xr"
-fi
-
 # nix
 # shellcheck source=/dev/null
 [[ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ]] && . "$HOME/.nix-profile/etc/profile.d/nix.sh"
+
+# homebrew
+APP_BINS+=(/opt/homebrew/bin)
+
+# add various alternate bin dirs to PATH. Add user dirs last for top priority
+for bin_dir in "${APP_BINS[@]}" "${USER_BINS[@]}"; do
+    [[ -d "$bin_dir" ]] && update_path "$bin_dir"
+done
+unset APP_BINS USER_BINS
