@@ -1,5 +1,5 @@
 SHELL = /bin/bash
-HERE = $(shell dirname $(shell realpath -e $(lastword ${MAKEFILE_LIST})))
+HERE = $(shell dirname $(shell realpath $(lastword ${MAKEFILE_LIST})))
 MV = mv -iv
 MV_SUFFIX = $(shell date +%s)
 
