@@ -16,14 +16,16 @@ load_extras() {
 
 update_path() {
     # only updates PATH if directory is not already there
-    local new_path="$*"
-    case ":$PATH:" in
-        # check glob match for new_path in the current PATH
-        *:"$new_path":*) ;;
-        *)
-            export PATH="$new_path:$PATH"
-            ;;
-    esac
+    local new_path
+    for new_path in "$@"; do
+        case ":$PATH:" in
+            # check glob match for new_path in the current PATH
+            *:"$new_path":*) ;;
+            *)
+                export PATH="$new_path:$PATH"
+                ;;
+        esac
+    done
 }
 
 _init_conda() {

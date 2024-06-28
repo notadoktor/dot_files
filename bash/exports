@@ -66,6 +66,9 @@ fi
 
 # homebrew
 APP_BINS+=(/opt/homebrew/bin)
+# add non g-prefixed coreutils to PATH
+APP_BINS+=(/opt/homebrew/Cellar/*/*/libexec/gnubin)
+
 
 # add various alternate bin dirs to PATH. Add user dirs last for top priority
 for bin_dir in "${APP_BINS[@]}" "${USER_BINS[@]}"; do

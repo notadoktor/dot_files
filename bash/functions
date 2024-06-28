@@ -507,7 +507,7 @@ lscnt() {
     else
         args=("$@")
     fi
-    find "${args[@]}" -maxdepth 1 -print | wc -l
+    find "${args[@]}" -depth 1  -print | wc -l
 }
 export -f lscnt
 
