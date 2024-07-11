@@ -510,13 +510,15 @@ ex() {
 }
 
 lscnt() {
-    local args
+    local args fcnt
     if (($# == 0)); then
         args=(.)
     else
         args=("$@")
     fi
-    find "${args[@]}" -depth 1  -print | wc -l
+    fcnt=$(find "${args[@]}" -depth -print | wc -l)
+    # subtract 1 for the directory itself
+    echo $((fcnt - 1))
 }
 export -f lscnt
 
