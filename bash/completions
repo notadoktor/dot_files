@@ -57,3 +57,11 @@ if command -v brew &>/dev/null; then
         done
     fi
 fi
+
+# macos git
+macos_git_comp=/Library/Developer/CommandLineTools/usr/share/git-core/git-completion.bash
+if [[ -r $macos_git_comp ]]; then
+    # shellcheck source=/dev/null
+    source "$macos_git_comp"
+fi
+unset macos_git_comp
