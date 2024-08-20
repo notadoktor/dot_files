@@ -125,6 +125,7 @@ randint() {
     local digits=${1:-2}
     tr -cd 0-9 </dev/urandom | head -c "${digits}" | perl -lne 'print(int($_))'
 }
+export -f randint
 
 # shellcheck disable=SC2120
 moo() {
