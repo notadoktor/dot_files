@@ -541,12 +541,14 @@ mamba-update() {
     fi
 
     declare -a env_names updated_envs
-    local install_log
+    local install_log _hostname
     if [[ -n $* ]]; then
         env_names+=("$@")
     else
+        _hostname=$(hostname -s)
+        _hostname=${_hostname:-$HOSTNAME}
         mapfile -t env_names < <(conda env list --json | jq -rc '.envs[]' | grep -oP '(?<=envs/)python3\d+$')
-        env_names=(base "$HOSTNAME" "${env_names[@]}")
+        env_names=(base "$_hostname" "${env_names[@]}")
     fi
     log "Checking for updates in ${#env_names[@]} environments"
 
