@@ -81,6 +81,10 @@ for supp_type in "${supp_files[@]:1}"; do
     load_extras "$supp_type"
 done
 
+if [[ $(uname -s) == "Darwin" ]]; then
+    check_macos_hostname
+fi
+
 # shellcheck disable=SC1091
 [[ -f $HOME/liquidprompt/liquidprompt && $- = *i* ]] && source "$HOME/liquidprompt/liquidprompt"
 

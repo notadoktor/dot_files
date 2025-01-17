@@ -654,3 +654,38 @@ del_stopped() {
         docker rm "$name"
     fi
 }
+
+# weird MacOS hostname thing
+check_macos_hostname() {
+    local _hostname _sc_hostname
+    _hostname=$(hostname -s)
+    _sc_hostname=$(scutil --get LocalHostName)
+    if [[ "$_hostname" != "$_sc_hostname" ]]; then
+        if [[  -n $_sc_hostname ]]; then
+            echo "Hostname borked, resetting from scutil: '$_sc_hostname'"
+            sudo hostname "$_sc_hostname"
+            exec bash
+        else
+            echo "WARNING: scutil hostname not found"
+        fi
+    fi
+}
+
+time_remaining() {
+    local total_tasks=$1 completed_tasks=$2 duration=$3
+    if [[ $# -ne 3 ]]; then
+        err "time_remaining requires 3 arguments: total_tasks, completed_tasks, duration"
+        return 1
+    fi
+
+    python3 <<EOF
+total_tasks = $total_tasks
+done_tasks = $completed_tasks
+dur = $duration
+n_remaining = total_tasks - done_tasks
+tpm = done_tasks / dur
+time_remaining = n_remaining/tpm
+print(f"avg tasks/min: {tpm:.02f}")
+print(f"remaining: {int(n_remaining)} tasks, {time_remaining:.02f}mins")
+EOF
+}
