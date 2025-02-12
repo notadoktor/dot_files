@@ -28,39 +28,6 @@ update_path() {
     done
 }
 
-_init_conda() {
-    local -a CONDA_DIRS=(
-        "$HOME/miniconda3"
-        "$HOME/.miniconda3"
-        "$HOME/miniforge3"
-        "$HOME/.miniforge3"
-        "$HOME/mambaforge"
-        "$HOME/.mambaforge"
-        "$HOME/condaforge"
-        "$HOME/.condaforge"
-    ) CONDA_DIR
-
-    local conda_flavor conda_profile
-    for CONDA_DIR in "${CONDA_DIRS[@]}"; do
-        if [[ -d "$CONDA_DIR" ]]; then
-            for conda_flavor in mamba conda; do
-                conda_profile="$CONDA_DIR/etc/profile.d/${conda_flavor}.sh"
-                if [[ -f "$conda_profile" ]]; then
-                    # shellcheck disable=SC1090
-                    source "$conda_profile"
-                fi
-            done
-            # break after loading the first conda dir (should only be 1 anyway)
-            break
-        fi
-    done
-
-    if command -v conda &>/dev/null && [[ ${CONDA_SHLVL:0} -lt 1 ]]; then
-        # echo "activating default conda env"
-        conda activate "${DEFAULT_CONDA_ENV:-base}"
-    fi
-}
-
 shopt -s cdspell
 shopt -s checkwinsize
 shopt -s dirspell
@@ -72,9 +39,6 @@ shopt -s no_empty_cmd_completion
 
 # load exports first
 load_extras "${supp_files[0]}"
-
-# setup conda
-_init_conda
 
 # load the rest
 for supp_type in "${supp_files[@]:1}"; do
