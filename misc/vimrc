@@ -17,3 +17,9 @@ set magic
 set t_vb=
 set nu
 set hlsearch
+
+if has("macunix") && $TERM_PROGRAM ==# "iTerm.app"
+  " Fix Delete key on macOS
+  nnoremap [3~ x
+  inoremap [3~ <Del>
+endif
